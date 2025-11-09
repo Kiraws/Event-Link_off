@@ -1,5 +1,6 @@
 import { PrimaryButtons } from "./primary-buttons";
 
+import EventsDataTable from "@/components/data/events-data-table";
 
 export default function DashboardEvents() {
   return (
@@ -12,6 +13,11 @@ export default function DashboardEvents() {
           </p>
         </div>
         <PrimaryButtons />
+      </div>
+
+      {/* Insert the table below the header */}
+      <div className="mt-4">
+        <EventsDataTable />
       </div>
     </div>
   )

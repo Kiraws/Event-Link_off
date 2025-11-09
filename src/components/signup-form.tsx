@@ -20,13 +20,6 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
           <Input id="name" type="text" placeholder="Jean Dupont" required />
         </Field>
         <Field>
-          <FieldLabel htmlFor="email">E-mail</FieldLabel>
-          <Input id="email" type="email" placeholder="m@exemple.com" required />
-          <FieldDescription>
-            Nous l&apos;utiliserons pour vous contacter. Nous ne partagerons jamais votre e-mail avec quiconque.
-          </FieldDescription>
-        </Field>
-        <Field>
           <FieldLabel htmlFor="sport">Discipline sportive</FieldLabel>
           <Select>
             <SelectTrigger id="sport">
@@ -45,18 +38,26 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
             </SelectContent>
           </Select>
         </Field>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     
+        <Field>
+          <FieldLabel htmlFor="email">E-mail</FieldLabel>
+          <Input id="email" type="email" placeholder="m@exemple.com" required />
+          {/* <FieldDescription>
+            Nous l&apos;utiliserons pour vous contacter. Nous ne partagerons jamais votre e-mail avec quiconque.
+          </FieldDescription> */}
+        </Field>
+      
           <Field>
             <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
             <Input id="password" type="password" required />
             <FieldDescription>Minimum 8 caractères.</FieldDescription>
           </Field>
-          <Field>
+          {/* <Field>
             <FieldLabel htmlFor="confirm-password">Confirmer</FieldLabel>
             <Input id="confirm-password" type="password" required />
             <FieldDescription>Confirmez votre mot de passe.</FieldDescription>
-          </Field>
-        </div>
+          </Field> */}
+        
         <Field>
           <Button type="submit" className="w-full">
             Créer un compte
@@ -76,7 +77,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
           </Field>
         <Field>
           <FieldDescription className="px-6 text-center">
-            Vous avez déjà un compte ? <a href="#">Se connecter</a>
+            Vous avez déjà un compte ? <a href="/login">Se connecter</a>
           </FieldDescription>
         </Field>
       </FieldGroup>

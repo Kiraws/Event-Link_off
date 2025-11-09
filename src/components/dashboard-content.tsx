@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, TrendingUp, Calendar } from "lucide-react"
+import { Users, TrendingUp, Calendar, Download } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs"
 // import Apps from "@/pages/Apps"
 import { Button } from "./ui/button"
@@ -29,7 +29,10 @@ export function DashboardContent() {
         <div className='mb-2 flex items-center justify-between space-y-2'>
           <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
           <div className='flex items-center space-x-2'>
-            <Button>Exporter</Button>
+            <Button>
+              <Download/>
+              Exporter
+            </Button>
           </div>
         </div>
         <Tabs

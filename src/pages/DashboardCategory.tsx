@@ -1,5 +1,6 @@
 import { PrimaryButtons } from "./primary-buttons";
-
+// ADD: import the Category data table component
+import CategoryDataTable from "@/components/data/category-data-table";
 
 export default function DashboardCategory() {
   return (
@@ -12,6 +13,11 @@ export default function DashboardCategory() {
           </p>
         </div>
         <PrimaryButtons />
+      </div>
+
+      {/* Insert the table below the header */}
+      <div className="mt-4">
+        <CategoryDataTable />
       </div>
     </div>
 

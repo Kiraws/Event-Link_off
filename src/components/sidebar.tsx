@@ -53,7 +53,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2 min-w-56">
+      <nav className=" flex flex-col justify-between flex-1 overflow-y-auto p-4 space-y-2 min-w-56">
         {/* General Section */}
         <div>
           <p className="text-xs font-semibold text-sidebar-foreground/50 uppercase mb-3 px-3">General</p>
@@ -77,13 +77,13 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
         </div>
 
         {/* Settings Section */}
-        <div className="mt-auto pt-28 border-t border-sidebar-border">
+        <div className="mt-auto">
           <p className="text-xs font-semibold text-sidebar-foreground/50 uppercase mb-3 px-3">Autres</p>
           <Link
-            to="/settings"
+            to="/dashboard/settings"
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-              isActive("/settings")
+              isActive("/dashboard/settings")
                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 : "text-sidebar-foreground hover:bg-sidebar-accent/50",
             )}
@@ -104,7 +104,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             <p className="text-xs font-semibold text-sidebar-foreground">satnaing</p>
             <p className="text-xs text-sidebar-foreground/50 truncate">satnaingdev@gmail.com</p>
           </div>
-          <ChevronRight className="w-4 h-4 text-sidebar-foreground/40 flex-shrink-0" />
+       
         </div>
       </div>
     </aside>

@@ -1,5 +1,6 @@
 import { PrimaryButtons } from "./primary-buttons";
-
+// ADD: import the Users data table component
+import UsersDataTable from "@/components/data/users-data-table";
 
 export default function Users() {
   return (
@@ -12,6 +13,11 @@ export default function Users() {
           </p>
         </div>
         <PrimaryButtons />
+      </div>
+
+      {/* Insert the table below the header */}
+      <div className="mt-4">
+        <UsersDataTable />
       </div>
     </div>
 
