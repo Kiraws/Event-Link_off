@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard"
 import Apps from "./pages/Apps"
 import Users from "./pages/Users"
 import Settings from "./pages/Settings"
-import HomePage from "./pages/home"
+
 import AboutPage from "./pages/about"
 import EventPage from "./pages/events"
 import ContactPage from "./pages/contact"
@@ -14,6 +14,8 @@ import LoginPage from "./pages/login"
 import { ThemeProvider } from "./components/theme-provider"
 import DashboardEvents from "./pages/DashboardEvents"
 import DashboardCategory from "./pages/DashboardCategory"
+ import EventDetailPage from "./pages/event-detail"
+import HomePage from "./pages/home"
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/events" element={<EventPage />} />
+           <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
