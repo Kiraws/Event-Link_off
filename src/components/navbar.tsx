@@ -8,31 +8,41 @@ import { Link } from "react-router-dom";
 const Navbar = () => {
   return (
     <nav className="h-16 bg-background border-b">
-      <div className="h-full flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-12">
+      <div className="h-full flex items-center justify-between max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Logo + Desktop Menu */}
+        <div className="flex items-center gap-6 sm:gap-10 lg:gap-12">
           <Logo />
 
-          {/* Desktop Menu */}
-          <NavMenu className="hidden md:block" />
+          {/* Menu PC seulement */}
+          <NavMenu className="hidden lg:block" />
         </div>
 
+        {/* Buttons + Mode + Mobile Menu */}
         <div className="flex items-center gap-3">
+
+          {/* Se connecter : visible à partir de sm */}
           <Link to="/login">
             <Button variant="outline" className="hidden sm:inline-flex">
               Se connecter
             </Button>
           </Link>
+
+          {/* S’inscrire : visible partout */}
           <Link to="/signup">
             <Button>
               S'inscrire
             </Button>
           </Link>
+
           <ModeToggle />
-          {/* Mobile Menu */}
-          <div className="md:hidden">
+
+          {/* Menu mobile/tablette */}
+          <div className="lg:hidden">
             <NavigationSheet />
           </div>
         </div>
+
       </div>
     </nav>
   );

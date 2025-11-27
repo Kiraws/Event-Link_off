@@ -25,7 +25,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
             <SelectTrigger id="sport">
               <SelectValue placeholder="Sélectionnez une discipline" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               <SelectItem value="football">Football</SelectItem>
               <SelectItem value="basketball">Basketball</SelectItem>
               <SelectItem value="tennis">Tennis</SelectItem>

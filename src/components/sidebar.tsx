@@ -89,7 +89,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             )}
           >
             <Settings className="w-4 h-4" />
-            <span>Settings</span>
+            <span>Paramètres</span>
           </Link>
         </div>
       </nav>

@@ -6,7 +6,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function Settings() {
+export default function DashboardSettings() {
   // ADD: local tab state for sidebar navigation
   const [tab, setTab] = React.useState<"profile" | "account" | "appearance" | "notifications" | "display">("profile")
 
@@ -40,19 +40,19 @@ export default function Settings() {
             <aside className="col-span-12 md:col-span-3">
               <nav className="flex md:flex-col gap-2">
                 <Button variant={tab === "profile" ? "secondary" : "ghost"} className="justify-start" onClick={() => setTab("profile")}>
-                  Profile
+                  Profil
                 </Button>
                 <Button variant={tab === "account" ? "secondary" : "ghost"} className="justify-start" onClick={() => setTab("account")}>
-                  Account
+                  Compte
                 </Button>
                 <Button variant={tab === "appearance" ? "secondary" : "ghost"} className="justify-start" onClick={() => setTab("appearance")}>
-                  Appearance
+                  Apparence
                 </Button>
                 <Button variant={tab === "notifications" ? "secondary" : "ghost"} className="justify-start" onClick={() => setTab("notifications")}>
                   Notifications
                 </Button>
                 <Button variant={tab === "display" ? "secondary" : "ghost"} className="justify-start" onClick={() => setTab("display")}>
-                  Display
+                  Affichage
                 </Button>
               </nav>
             </aside>

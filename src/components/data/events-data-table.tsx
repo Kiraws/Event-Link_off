@@ -1,16 +1,12 @@
-// ... previous implementation removed ...
-
 "use client"
 
 import * as React from "react"
-// FIX: type-only imports for TS with verbatimModuleSyntax
 import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table"
-// FIX: add flexRender and keep value imports separate
 import {
   flexRender,
   getCoreRowModel,
@@ -19,7 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Settings2 } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Settings2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -40,8 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-// ADD: shadcn Dialog components
 import {
   Dialog,
   DialogClose,
@@ -52,11 +46,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
-// ADD: shadcn Sheet components for the Edit action
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-
-// INSERT: UI helpers to style the Sheet like the example
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -65,8 +55,8 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
-// mock event type
 type EventRow = {
   id: string
   nom: string
@@ -74,16 +64,18 @@ type EventRow = {
   date?: string
   startDate?: string
   endDate?: string
+  startTime?: string
+  endTime?: string
   category: string
   payant: "oui" | "non"
   organisateur: string
   places: number
+  isPublished: boolean
+  image?: string
 }
 
-// format FR date
 const formatDate = (s?: string) => (s ? new Date(s).toLocaleDateString("fr-FR") : "")
 
-// table columns
 const columns: ColumnDef<EventRow>[] = [
   {
     id: "select",
@@ -169,9 +161,22 @@ const columns: ColumnDef<EventRow>[] = [
     cell: ({ row }) => <div className="">{row.getValue("places")}</div>,
   },
   {
+    accessorKey: "isPublished",
+    header: "Statut",
+    cell: ({ row }) => {
+      const isPublished = row.getValue<boolean>("isPublished")
+      return (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${
+          isPublished ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+        }`}>
+          {isPublished ? "Publié" : "Brouillon"}
+        </span>
+      )
+    },
+  },
+  {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
-    // REPLACED: inline dropdown actions with a dedicated RowActions component
     cell: ({ row }) => <RowActions row={row.original} />,
     enableSorting: false,
     enableHiding: false,
@@ -179,19 +184,18 @@ const columns: ColumnDef<EventRow>[] = [
 ]
 
 export default function EventsDataTable() {
-  // Mock data for events (fictitious)
   const data = React.useMemo<EventRow[]>(
     () => [
-      { id: "EVT-001", nom: "Conférence Tech 2025", isMultiDay: true, startDate: "2025-03-12", endDate: "2025-03-14", category: "Conférence", payant: "oui", organisateur: "TechCorp", places: 250},
-      { id: "EVT-002", nom: "Atelier Design", isMultiDay: false, date: "2025-04-05", category: "Atelier", payant: "non", organisateur: "Design Hub", places: 40},
-      { id: "EVT-003", nom: "Meetup JS", isMultiDay: false, date: "2025-05-02", category: "Meetup", payant: "non", organisateur: "Dev Community", places: 120},
-      { id: "EVT-004", nom: "Salon Entreprises", isMultiDay: true, startDate: "2025-06-20", endDate: "2025-06-22", category: "Salon", payant: "oui", organisateur: "Business Expo", places: 500},
-      { id: "EVT-005", nom: "Hackathon AI", isMultiDay: true, startDate: "2025-07-10", endDate: "2025-07-12", category: "Hackathon", payant: "non", organisateur: "AI Labs", places: 100},
-      { id: "EVT-006", nom: "Forum Étudiants", isMultiDay: false, date: "2025-08-28", category: "Forum", payant: "non", organisateur: "Université Centrale", places: 300 },
-      { id: "EVT-007", nom: "Webinar Sécurité", isMultiDay: false, date: "2025-09-09", category: "Webinar", payant: "oui", organisateur: "SecOps", places: 1000},
-      { id: "EVT-008", nom: "Concert d’été", isMultiDay: false, date: "2025-07-30", category: "Concert", payant: "oui", organisateur: "City Events", places: 800 },
-      { id: "EVT-009", nom: "Séminaire RH", isMultiDay: true, startDate: "2025-10-03", endDate: "2025-10-04", category: "Séminaire", payant: "oui", organisateur: "PeopleFirst", places: 60},
-      { id: "EVT-010", nom: "Formation Node.js", isMultiDay: false, date: "2025-11-15", category: "Formation", payant: "non", organisateur: "CodeSchool", places: 25},
+      { id: "EVT-001", nom: "Conférence Tech 2025", isMultiDay: true, startDate: "2025-03-12", endDate: "2025-03-14", startTime: "09:00", endTime: "17:00", category: "Conférence", payant: "oui", organisateur: "TechCorp", places: 250, isPublished: true, image: "https://example.com/image1.jpg" },
+      { id: "EVT-002", nom: "Atelier Design", isMultiDay: false, date: "2025-04-05", startTime: "14:00", endTime: "18:00", category: "Atelier", payant: "non", organisateur: "Design Hub", places: 40, isPublished: true, image: "https://example.com/image2.jpg" },
+      { id: "EVT-003", nom: "Meetup JS", isMultiDay: false, date: "2025-05-02", startTime: "19:00", endTime: "21:00", category: "Meetup", payant: "non", organisateur: "Dev Community", places: 120, isPublished: false, image: "https://example.com/image3.jpg" },
+      { id: "EVT-004", nom: "Salon Entreprises", isMultiDay: true, startDate: "2025-06-20", endDate: "2025-06-22", startTime: "10:00", endTime: "18:00", category: "Salon", payant: "oui", organisateur: "Business Expo", places: 500, isPublished: true, image: "https://example.com/image4.jpg" },
+      { id: "EVT-005", nom: "Hackathon AI", isMultiDay: true, startDate: "2025-07-10", endDate: "2025-07-12", startTime: "08:00", endTime: "20:00", category: "Hackathon", payant: "non", organisateur: "AI Labs", places: 100, isPublished: false, image: "https://example.com/image5.jpg" },
+      { id: "EVT-006", nom: "Forum Étudiants", isMultiDay: false, date: "2025-08-28", startTime: "13:00", endTime: "17:00", category: "Forum", payant: "non", organisateur: "Université Centrale", places: 300, isPublished: true, image: "https://example.com/image6.jpg" },
+      { id: "EVT-007", nom: "Webinar Sécurité", isMultiDay: false, date: "2025-09-09", startTime: "15:00", endTime: "16:30", category: "Webinar", payant: "oui", organisateur: "SecOps", places: 1000, isPublished: true, image: "https://example.com/image7.jpg" },
+      { id: "EVT-008", nom: "Concert d'été", isMultiDay: false, date: "2025-07-30", startTime: "20:00", endTime: "23:00", category: "Concert", payant: "oui", organisateur: "City Events", places: 800, isPublished: false, image: "https://example.com/image8.jpg" },
+      { id: "EVT-009", nom: "Séminaire RH", isMultiDay: true, startDate: "2025-10-03", endDate: "2025-10-04", startTime: "09:00", endTime: "17:00", category: "Séminaire", payant: "oui", organisateur: "PeopleFirst", places: 60, isPublished: true, image: "https://example.com/image9.jpg" },
+      { id: "EVT-010", nom: "Formation Node.js", isMultiDay: false, date: "2025-11-15", startTime: "10:00", endTime: "16:00", category: "Formation", payant: "non", organisateur: "CodeSchool", places: 25, isPublished: true, image: "https://example.com/image10.jpg" },
     ],
     []
   )
@@ -222,7 +226,6 @@ export default function EventsDataTable() {
 
   return (
     <div className="w-full">
-      {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 py-4">
         <Input
           placeholder="Filtrer par nom…"
@@ -231,12 +234,11 @@ export default function EventsDataTable() {
           className="w-64"
         />
 
-        {/* Column visibility + actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-           <Settings2 />
-            Voir
+              <Settings2 />
+              Voir
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -259,7 +261,6 @@ export default function EventsDataTable() {
         </DropdownMenu>
       </div>
 
-      {/* DataTable */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -267,7 +268,6 @@ export default function EventsDataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {/* FIX: use flexRender to provide proper HeaderContext */}
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -282,7 +282,6 @@ export default function EventsDataTable() {
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {/* FIX: use flexRender for cells (removes any and type errors) */}
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -299,7 +298,6 @@ export default function EventsDataTable() {
         </Table>
       </div>
 
-      {/* Footer: selection + pagination */}
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
           {Object.keys(rowSelection).length} row(s) selected.
@@ -327,21 +325,15 @@ export default function EventsDataTable() {
   )
 }
 
-// INSERT: RowActions component (uses shadcn Dialog + Sheet)
 function RowActions({ row }: { row: EventRow }) {
-  // local state to handle Edit sheet
   const [editOpen, setEditOpen] = React.useState(false)
-
-  // NEW: controlled form state mirroring your fields
   const [form, setForm] = React.useState<EventRow | null>(null)
 
-  // helper to update form fields
   const update = <K extends keyof EventRow>(key: K, value: EventRow[K]) =>
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev))
 
   return (
     <div className="flex justify-end">
-      {/* Actions dropdown */}
       <Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -353,30 +345,26 @@ function RowActions({ row }: { row: EventRow }) {
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
 
-            {/* EDIT: open the Sheet with selected row */}
             <DropdownMenuItem
               onClick={() => {
-                // REMOVED: setSelected(row)
-                setForm(row) // initialize form with current row data
+                setForm(row)
                 setEditOpen(true)
               }}
             >
               Éditer
             </DropdownMenuItem>
 
-            {/* DELETE: open confirmation dialog */}
             <DialogTrigger asChild>
               <DropdownMenuItem>Supprimer</DropdownMenuItem>
             </DialogTrigger>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Delete Confirmation Dialog */}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Supprimer l’évènement</DialogTitle>
+            <DialogTitle>Supprimer l'évènement</DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer l’évènement {row.id} ? Cette action est
+              Êtes-vous sûr de vouloir supprimer l'évènement {row.id} ? Cette action est
               définitive.
             </DialogDescription>
           </DialogHeader>
@@ -387,7 +375,6 @@ function RowActions({ row }: { row: EventRow }) {
             <Button
               variant="destructive"
               onClick={() => {
-                // TODO: wire to delete API
                 console.log("Confirm delete", row.id)
               }}
             >
@@ -397,36 +384,32 @@ function RowActions({ row }: { row: EventRow }) {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Sheet styled like the example while keeping your fields */}
       <Sheet
         open={editOpen}
         onOpenChange={(open) => {
           setEditOpen(open)
           if (!open) {
-            // REMOVED: setSelected(null)
             setForm(null)
           }
         }}
       >
         <SheetContent side="right" className="sm:max-w-[400px] pt-2">
           <SheetHeader>
-            <SheetTitle>Mettre à jour l’évènement</SheetTitle>
+            <SheetTitle>Mettre à jour l'évènement</SheetTitle>
             <SheetDescription>
-              Modifiez les informations de l’évènement. Cliquez sur “Save changes” quand vous avez terminé.
+              Modifiez les informations de l'évènement. Cliquez sur "Enregistrer les modifications" quand vous avez terminé.
             </SheetDescription>
           </SheetHeader>
 
           {form && (
             <form
-              className="mt-4 px-4 grid gap-6 overflow-y-scroll"
+              className="mt-4 px-4 grid gap-6 overflow-y-auto max-h-[calc(100vh-200px)]"
               onSubmit={(e) => {
                 e.preventDefault()
-                // TODO: persist form with your API
                 console.log("Save changes", form)
                 setEditOpen(false)
               }}
             >
-              {/* Title-like field (Nom) */}
               <div className="grid gap-3">
                 <Label htmlFor="nom">Titre</Label>
                 <Input
@@ -436,7 +419,6 @@ function RowActions({ row }: { row: EventRow }) {
                 />
               </div>
 
-              {/* Status-like field using Select for Payant */}
               <div className="grid gap-3">
                 <Label htmlFor="payant">Payant</Label>
                 <Select
@@ -453,7 +435,6 @@ function RowActions({ row }: { row: EventRow }) {
                 </Select>
               </div>
 
-              {/* Label-like group (Category) */}
               <div className="grid gap-3">
                 <Label htmlFor="category">Catégorie</Label>
                 <Input
@@ -463,7 +444,6 @@ function RowActions({ row }: { row: EventRow }) {
                 />
               </div>
 
-              {/* Priority-like radio group mapped to Organisateur type? Keep your field: Organisateur text */}
               <div className="grid gap-3">
                 <Label htmlFor="organisateur">Organisateur</Label>
                 <Input
@@ -473,7 +453,6 @@ function RowActions({ row }: { row: EventRow }) {
                 />
               </div>
 
-              {/* Dates section */}
               <div className="grid gap-3">
                 <Label>Dates</Label>
                 {form.isMultiDay ? (
@@ -498,7 +477,30 @@ function RowActions({ row }: { row: EventRow }) {
                 )}
               </div>
 
-              {/* Places number input */}
+              <div className="grid gap-3">
+                <Label>Horaires</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="startTime" className="text-sm">Début</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={form.startTime ?? ""}
+                      onChange={(e) => update("startTime", e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="endTime" className="text-sm">Fin</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={form.endTime ?? ""}
+                      onChange={(e) => update("endTime", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid gap-3">
                 <Label htmlFor="places">Places</Label>
                 <Input
@@ -509,35 +511,62 @@ function RowActions({ row }: { row: EventRow }) {
                   onChange={(e) => update("places", Number(e.target.value))}
                 />
               </div>
-              <div className="flex items-center gap-2 ">
-                <Button 
-                  variant="outline" 
-                  type="button" 
-                  className="w-1/2"
-                >
-                Publier
-                </Button>
-                <Button type="submit" className="w-1/2">
-                 Dépublier
-                </Button>
+
+              <div className="grid gap-3">
+                <Label htmlFor="image">Image de l'événement</Label>
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onloadend = () => {
+                        update("image", reader.result as string)
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+                {form.image && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border">
+                    <img 
+                      src={form.image || "/placeholder.svg"} 
+                      alt="Aperçu" 
+                      className="w-full h-32 object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Footer buttons styled like the example */}
-              <div className="flex flex-col items-center gap-2 space-y-2 ">
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <Label htmlFor="isPublished" className="flex flex-col gap-1">
+                  <span className="font-medium text-sm">État de publication</span>
+                  <span className="text-xs text-muted-foreground">
+                    {form.isPublished ? "Événement publié" : "Événement en brouillon"}
+                  </span>
+                </Label>
+                <Switch
+                  id="isPublished"
+                  checked={form.isPublished}
+                  onCheckedChange={(checked) => update("isPublished", checked)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 pt-4">
                 <Button 
-                  variant="outline" 
                   type="button" 
+                  variant="outline" 
                   onClick={() => setEditOpen(false)}
                   className="w-full"
                 >
-                 Fermer
+                  Fermer
                 </Button>
                 <Button type="submit" className="w-full">
                   Enregistrer les modifications
                 </Button>
               </div>
-             
-
             </form>
           )}
         </SheetContent>

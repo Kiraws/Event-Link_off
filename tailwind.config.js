@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)'], // <--- indique à Tailwind d'utiliser poppins
+      },
+    },
   },
   plugins: [],
 }

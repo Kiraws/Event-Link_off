@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Star } from "lucide-react"
+import { Star } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 type EventCardProps = {
@@ -91,7 +91,7 @@ export function EventCard({
       <div className="relative h-44 bg-gray-100">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            src={imageUrl || "/placeholder.svg"}
             alt={title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -99,9 +99,9 @@ export function EventCard({
           <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
         )}
 
-        {/* Category */}
+        {/* Category - Updated to Vert Profond premium style */}
         {category && (
-          <span className="absolute left-3 bottom-3 rounded-full bg-black/70 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white shadow-md">
+          <span className="absolute left-3 bottom-3 rounded-full bg-[#064E32] backdrop-blur-sm px-3 py-1 text-xs font-medium text-white shadow-md">
             {category}
           </span>
         )}
@@ -115,7 +115,7 @@ export function EventCard({
             "absolute top-3 right-3 grid place-items-center rounded-full p-1.5",
             "bg-white/90 backdrop-blur-sm shadow-md border border-white/30",
             "transition-all hover:scale-110",
-            fav && "text-amber-500"
+            fav && "text-[#D4AF37]"
           )}
         >
           <Star className={cn("h-4 w-4", fav ? "fill-current" : "text-gray-600")} />
@@ -125,10 +125,10 @@ export function EventCard({
       {/* Content */}
       <div className="flex flex-1 p-4">
         <div className="grid grid-cols-[64px_1fr] gap-3 flex-1">
-          {/* Date Block */}
-          <div className="flex flex-col items-center justify-center bg-gradient-to-b from-indigo-50 to-indigo-100 rounded-lg py-2">
-            <span className="text-indigo-600 font-bold text-sm leading-none">{formatMonthAbbr(startDate)}</span>
-            <span className="text-gray-900 font-extrabold text-2xl leading-tight">{formatDay(startDate)}</span>
+          {/* Date Block - Updated to Vert Émeraude gradient */}
+          <div className="flex flex-col items-center justify-center bg-gradient-to-b from-[#0B8A58]/10 to-[#0B8A58]/20 rounded-lg py-2">
+            <span className="text-[#0B8A58] font-bold text-sm leading-none">{formatMonthAbbr(startDate)}</span>
+            <span className="text-[#1A1A1A] font-extrabold text-2xl leading-tight">{formatDay(startDate)}</span>
             {endDate && isMultiDay && (
               <span className="text-xs text-gray-600 mt-0.5">→ {formatDay(endDate)}</span>
             )}
@@ -137,7 +137,7 @@ export function EventCard({
           {/* Text */}
           <div className="flex flex-col justify-between">
             <div>
-              <h3 className="font-bold text-gray-900 line-clamp-2 text-base leading-tight">
+              <h3 className="font-bold text-[#1A1A1A] line-clamp-2 text-base leading-tight">
                 {title}
               </h3>
               {description && (
@@ -147,8 +147,9 @@ export function EventCard({
               )}
             </div>
 
+            {/* Time Label - Updated to Vert Émeraude premium */}
             <div className="mt-2 space-y-0.5">
-              <p className="text-sm font-semibold text-indigo-700">{timeLabel}</p>
+              <p className="text-sm font-semibold text-[#0B8A58]">{timeLabel}</p>
             </div>
           </div>
         </div>

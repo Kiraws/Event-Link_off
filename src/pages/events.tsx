@@ -44,7 +44,7 @@ export default function EventPage() {
   return (
     <div className="flex min-h-svh flex-col gap-0">
       {/* Hero header */}
-      <section className="w-full px-6 py-28 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex justify-center items-center">
+      <section className="w-full px-6 py-28 bg-[#D4AF37] text-white flex justify-center items-center">
         <div className="max-w-5xl mx-auto space-y-8">
           <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
             Explore le monde du sport.<br />

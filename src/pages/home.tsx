@@ -6,9 +6,16 @@ import * as React from "react"
 import { EventCard } from "@/components/cards/EventCard"
 import { mockWideEvents } from "@/data/mock-events"
 import { useEffect, useRef } from 'react'
+import { Highlighter } from '@/components/ui/highlighter'
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const [name, setName] = React.useState("");
+const [email, setEmail] = React.useState("");
+const [message, setMessage] = React.useState("");
+const [loading, setLoading] = React.useState(false);
+const [feedback, setFeedback] = React.useState("");
+
 
   // État unique : recherche
   const [query, setQuery] = React.useState("")
@@ -35,6 +42,31 @@ export default function HomePage() {
     { name: "Athlétisme", url: "/course.jpg" },
     { name: "HandBall", url: "/hand.jpg" },
   ]
+
+const handleContact = async () => {
+  setFeedback("");
+
+  if (!name.trim() || !email.trim() || !message.trim()) {
+    setFeedback("❌ Veuillez remplir tous les champs.");
+    return;
+  }
+
+  if (!email.includes("@")) {
+    setFeedback("❌ Email invalide.");
+    return;
+  }
+
+  setLoading(true);
+
+  // Simulation API
+  setTimeout(() => {
+    setLoading(false);
+    setFeedback("✅ Message envoyé avec succès !");
+    setName("");
+    setEmail("");
+    setMessage("");
+  }, 1500);
+};
 
   useEffect(() => {
     const carousel = carouselRef.current
@@ -83,15 +115,17 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* Hero */}
       <section className="relative w-full h-[360px] sm:h-[420px]">
-        <img src="/" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src="/bann.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-6xl mx-auto px-6 sm:px-8 pt-10 sm:pt-14">
           <h1 className="text-white text-3xl sm:text-4xl font-bold leading-snug max-w-3xl">
             A ne pas manquer !<br />
-            Explore les évènements sportifs <span className="text-yellow-400">évènements sportifs</span><br />
+            Explore les {" "}
+            <Highlighter action="underline" color="#D4AF37">
+              évènements sportifs
+            </Highlighter>{" "}
             qui font vibrer Lomé
           </h1>
-
           {/* Barre de recherche simple */}
           <div className="mt-8 max-w-xl">
             <Input
@@ -104,31 +138,37 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Catégories */}
-      <section className="mx-auto w-full px-6 sm:px-8 py-8 overflow-hidden">
-        <h2 className="text-3xl font-bold mb-6">Explorer les catégories</h2>
-        <div className="relative group overflow-hidden">
-          <div
-            ref={carouselRef}
-            className="flex gap-10"
-            style={{ willChange: 'transform', transition: 'transform 0.3s ease-out' }}
-          >
-            {categories.map((c, i) => (
-              <div key={`${c.name}-${i}`} className="flex flex-col items-center gap-3 flex-shrink-0" style={{ width: '160px' }}>
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                  <img src={c.url} alt={c.name} className="w-full h-full object-cover" />
-                </div>
-                <span className="text-sm text-slate-600 text-center whitespace-nowrap">{c.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <section className="max-w-6xl mx-auto w-full px-6 sm:px-8 py-6">
+       <h2 className="font-bold  text-2xl sm:text-3xl lg:text-3xl">
+        Explorer les catégories
+       </h2>
       </section>
+      {/* Catégories */}
+      <section className="mx-auto w-full py-8 overflow-hidden blur-edges">
+  <div className="relative group overflow-hidden">
+    <div
+      ref={carouselRef}
+      className="flex gap-10"
+      style={{ willChange: 'transform', transition: 'transform 0.3s ease-out' }}
+    >
+      {categories.map((c, i) => (
+        <div key={`${c.name}-${i}`} className="flex flex-col items-center gap-3 flex-shrink-0" style={{ width: '160px' }}>
+          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+            <img src={c.url} alt={c.name} className="w-full h-full object-cover" />
+          </div>
+          <span className="text-sm text-slate-600 text-center whitespace-nowrap">{c.name}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* Événements à venir */}
       <section className="max-w-6xl mx-auto w-full px-6 sm:px-8 py-6">
-        <h2 className="text-3xl font-bold mb-6">Évènements à venir</h2>
+       <h2 className="font-bold mb-6 text-2xl sm:text-3xl lg:text-3xl">
+    Évènements à venir
+  </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockWideEvents.slice(0, 9).map((e) => (
@@ -160,16 +200,60 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter */}
-      <section className="bg-yellow-300/90 py-20">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 text-center">
-          <h3 className="text-2xl font-bold mb-2">Abonnez-vous à notre newsletter</h3>
-          <p className="text-slate-700 mb-6">Recevez les meilleurs évènements directement dans votre boîte.</p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <Input placeholder="Votre email" className="flex-1" />
-            <Button className="whitespace-nowrap">S’abonner</Button>
+      <section className="bg-[#D4AF37] py-20">
+        <div className="max-w-xl mx-auto px-6 text-center space-y-6">
+
+          <div>
+            <h3 className="text-3xl font-bold text-white">Contactez-nous</h3>
+            <p className="text-white/90 mt-2">
+              Une question ? Une suggestion ? Écrivez-nous directement.
+            </p>
+          </div>
+
+          <div className="space-y-4 text-left">
+
+            <Input
+              placeholder="Votre nom"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+            />
+
+            <Input
+              placeholder="Votre email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+            />
+
+            <textarea
+              placeholder="Votre message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full h-32 rounded-lg p-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+            />
+
+            <div className="flex justify-center pt-3">
+              <Button
+                onClick={handleContact}
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? "Envoi en cours..." : "Envoyer"}
+              </Button>
+            </div>
+
+            {feedback && (
+              <p className="mt-3 text-center text-white font-medium animate-pulse">
+                {feedback}
+              </p>
+            )}
           </div>
         </div>
       </section>
+
+
+      
     </div>
   )
 }

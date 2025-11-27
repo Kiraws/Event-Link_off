@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Star, Ticket } from "lucide-react"
+import { Star, Ticket } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 type EventWideCardProps = {
@@ -35,7 +35,7 @@ export function EventWideCard({
   end,
   location,
   priceLabel,
-  priceColorClass = "text-emerald-600",
+  priceColorClass = "text-[#0B8A58]", // Vert Émeraude par défaut
   isFavorite,
   onToggleFavorite,
   className,
@@ -61,14 +61,14 @@ export function EventWideCard({
     : startDate.toLocaleTimeString("en", { hour: "numeric", minute: "2-digit", hour12: true })
 
   const isFree = !priceLabel || ["FREE", "GRATUIT"].includes(priceLabel.trim().toUpperCase())
-  const ticketColor = isFree ? "text-green-600" : priceColorClass
+  const ticketColor = isFree ? "text-[#0B8A58]" : priceColorClass // Vert Émeraude pour gratuit
   const ticketLabel = isFree ? "Gratuit" : priceLabel
 
   return (
     <div
       className={cn(
         "group relative rounded-lg border bg-white shadow-xs transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 overflow-hidden",
-        "flex flex-col sm:flex-row h-full min-h-40", // Compact height
+        "flex flex-col sm:flex-row h-full min-h-40",
         className
       )}
     >
@@ -76,7 +76,7 @@ export function EventWideCard({
       <div className="relative w-full sm:w-36 h-28 sm:h-auto flex-shrink-0 bg-gray-100">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            src={imageUrl || "/placeholder.svg"}
             alt={title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -86,7 +86,7 @@ export function EventWideCard({
 
         {/* Category */}
         {category && (
-          <span className="absolute left-1.5 bottom-1.5 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-900 shadow-sm">
+          <span className="absolute left-1.5 bottom-1.5 rounded-full bg-[#064E32] px-2 py-0.5 text-xs font-medium text-[#FFFFFF] shadow-sm">
             {category}
           </span>
         )}
@@ -100,7 +100,7 @@ export function EventWideCard({
             "absolute top-1.5 right-1.5 grid place-items-center rounded-full p-1",
             "bg-white/90 backdrop-blur-sm shadow-sm border border-white/30",
             "transition-transform hover:scale-110",
-            fav && "text-amber-500"
+            fav && "text-[#D4AF37]" // Or Fin quand actif
           )}
         >
           <Star className={cn("h-3.5 w-3.5", fav ? "fill-current" : "text-gray-600")} />
@@ -110,13 +110,13 @@ export function EventWideCard({
       {/* Content */}
       <div className="flex flex-1 flex-col justify-center p-3 sm:p-4 space-y-1">
         {/* Title */}
-        <h3 className="line-clamp-1 font-bold text-gray-900 text-base leading-tight">
+        <h3 className="line-clamp-1 font-bold text-[#1A1A1A] text-base leading-tight">
           {title}
         </h3>
 
         {/* Date + Location */}
         <p className="text-xs text-gray-600 flex items-center gap-1.5">
-          <span className="font-medium">{monthDay}</span>
+          <span className="font-medium text-[#0B8A58]">{monthDay}</span>
           {location && (
             <>
               <span className="text-gray-400">•</span>
@@ -126,7 +126,9 @@ export function EventWideCard({
         </p>
 
         {/* Time */}
-        <p className="text-xs font-medium text-gray-700">{timeRange}</p>
+        <p className="text-xs font-medium text-[#0B8A58]">
+          {timeRange}
+        </p>
 
         {/* Price */}
         <div className="mt-1.5 flex items-center gap-1.5">
