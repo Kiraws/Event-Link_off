@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input'
 import { Link, useNavigate } from 'react-router-dom'
 import * as React from "react"
 import { EventCard } from "@/components/cards/EventCard"
-import { mockWideEvents } from "@/data/mock-events"
+import { eventsService, categoriesService, type Event as ApiEvent, type Category } from "../../api"
+import { toast } from "sonner"
 import { useEffect, useRef } from 'react'
 import { Highlighter } from '@/components/ui/highlighter'
+import { Loader2 } from "lucide-react"
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -32,16 +34,94 @@ const [feedback, setFeedback] = React.useState("");
   const animationRef = useRef<number | null>(null)
   const positionRef = useRef(0)
 
-  const categories = [
-    { name: "Football", url: "/footbal.jpg" },
-    { name: "Basketball", url: "/basket.jpg" },
-    { name: "Sport de glisse Ski", url: "/ski.jpg" },
-    { name: "Tennis", url: "/tennis.jpg" },
-    { name: "Badminton", url: "/bad.jpg" },
-    { name: "Rugby", url: "/rub.jpg" },
-    { name: "Athlétisme", url: "/course.jpg" },
-    { name: "HandBall", url: "/hand.jpg" },
-  ]
+  // États pour les données de l'API
+  const [categories, setCategories] = React.useState<Category[]>([])
+  const [events, setEvents] = React.useState<ApiEvent[]>([])
+  const [loadingCategories, setLoadingCategories] = React.useState(true)
+  const [loadingEvents, setLoadingEvents] = React.useState(true)
+
+  // Charger les catégories
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        // Charger toutes les catégories
+        const categoriesResponse = await categoriesService.getAll()
+        
+        // Log pour debug - voir la structure complète de la réponse
+        console.log('Réponse API catégories complète:', categoriesResponse)
+        
+        // La réponse peut avoir différentes structures selon l'API
+        let allCategories: Category[] = []
+        
+        // Essayer différentes structures de réponse
+        if (Array.isArray(categoriesResponse.data)) {
+          allCategories = categoriesResponse.data
+        } else if (categoriesResponse.data && typeof categoriesResponse.data === 'object' && 'data' in categoriesResponse.data && Array.isArray((categoriesResponse.data as any).data)) {
+          allCategories = (categoriesResponse.data as any).data
+        } else if (Array.isArray(categoriesResponse)) {
+          allCategories = categoriesResponse
+        }
+        
+        console.log('Catégories extraites:', allCategories)
+        
+        // Filtrer les catégories actives, ou utiliser toutes si aucune n'est active
+        const activeCategories = allCategories.filter((cat: Category) => cat.active === true)
+        const categoriesToDisplay = activeCategories.length > 0 ? activeCategories : allCategories
+        
+        setCategories(categoriesToDisplay)
+        
+        // Log pour debug
+        console.log('Catégories finales:', {
+          total: allCategories.length,
+          actives: activeCategories.length,
+          affichées: categoriesToDisplay.length,
+          catégories: categoriesToDisplay
+        })
+        
+        if (categoriesToDisplay.length === 0) {
+          console.warn('Aucune catégorie à afficher après chargement')
+        }
+      } catch (err: any) {
+        console.error('Erreur lors du chargement des catégories:', err)
+        console.error('Détails de l\'erreur:', {
+          message: err.message,
+          status: err.status,
+          error: err.error,
+          response: err
+        })
+        toast.error(`Impossible de charger les catégories: ${err.message || 'Erreur inconnue'}`)
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  // Charger les événements
+  React.useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoadingEvents(true)
+        const eventsResponse = await eventsService.getAll()
+        // Limiter à 9 événements pour la page d'accueil
+        setEvents((eventsResponse.data || []).slice(0, 9))
+      } catch (err: any) {
+        console.error('Erreur lors du chargement des événements:', err)
+        toast.error("Impossible de charger les événements")
+      } finally {
+        setLoadingEvents(false)
+      }
+    }
+    loadEvents()
+  }, [])
+
+  // Créer un map des catégories pour accès rapide
+  const categoryMap = React.useMemo(() => {
+    const map = new Map<string, Category>()
+    categories.forEach(cat => map.set(cat.uid, cat))
+    return map
+  }, [categories])
 
 const handleContact = async () => {
   setFeedback("");
@@ -70,18 +150,15 @@ const handleContact = async () => {
 
   useEffect(() => {
     const carousel = carouselRef.current
-    if (!carousel) return
+    if (!carousel || categories.length === 0) return
 
     const itemWidth = 200
     const totalWidth = categories.length * itemWidth
     const speed = 1
     let isPaused = false
 
-    const clone = carousel.innerHTML
-    carousel.innerHTML += clone
-
     const animate = () => {
-      if (!isPaused) {
+      if (!isPaused && carousel) {
         positionRef.current -= speed
         carousel.style.transform = `translateX(${positionRef.current}px)`
         if (Math.abs(positionRef.current) >= totalWidth) {
@@ -89,7 +166,9 @@ const handleContact = async () => {
           carousel.style.transition = 'none'
           carousel.style.transform = `translateX(${positionRef.current}px)`
           requestAnimationFrame(() => {
-            carousel.style.transition = 'transform 0.3s ease-out'
+            if (carousel) {
+              carousel.style.transition = 'transform 0.3s ease-out'
+            }
           })
         }
       }
@@ -109,7 +188,7 @@ const handleContact = async () => {
       parent?.removeEventListener('mouseenter', handleMouseEnter)
       parent?.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [])
+  }, [categories])
 
   return (
     <div className="flex flex-col">
@@ -145,23 +224,60 @@ const handleContact = async () => {
       </section>
       {/* Catégories */}
       <section className="mx-auto w-full py-8 overflow-hidden blur-edges">
-  <div className="relative group overflow-hidden">
-    <div
-      ref={carouselRef}
-      className="flex gap-10"
-      style={{ willChange: 'transform', transition: 'transform 0.3s ease-out' }}
-    >
-      {categories.map((c, i) => (
-        <div key={`${c.name}-${i}`} className="flex flex-col items-center gap-3 flex-shrink-0" style={{ width: '160px' }}>
-          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
-            <img src={c.url} alt={c.name} className="w-full h-full object-cover" />
+        {loadingCategories ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-[#D4AF37]" />
+            <span className="ml-2 text-muted-foreground">Chargement des catégories...</span>
           </div>
-          <span className="text-sm text-slate-600 text-center whitespace-nowrap">{c.name}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
+        ) : categories.length > 0 ? (
+          <div className="relative group overflow-hidden">
+            <div
+              ref={carouselRef}
+              className="flex gap-10"
+              style={{ willChange: 'transform', transition: 'transform 0.3s ease-out' }}
+            >
+              {/* Première série */}
+              {categories.map((c, i) => {
+                const imageUrl = c.slug || '/placeholder-category.jpg'
+                return (
+                  <div 
+                    key={`${c.uid}-${i}`} 
+                    className="flex flex-col items-center gap-3 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" 
+                    style={{ width: '160px' }}
+                    onClick={() => navigate(`/events?category=${c.uid}`)}
+                  >
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg hover:border-[#D4AF37] transition-colors">
+                      <img src={imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-sm text-slate-600 text-center whitespace-nowrap font-medium">{c.name}</span>
+                  </div>
+                )
+              })}
+              {/* Doublon pour l'animation infinie */}
+              {categories.map((c, i) => {
+                const imageUrl = c.slug || '/placeholder-category.jpg'
+                return (
+                  <div 
+                    key={`${c.uid}-clone-${i}`} 
+                    className="flex flex-col items-center gap-3 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform" 
+                    style={{ width: '160px' }}
+                    onClick={() => navigate(`/events?category=${c.uid}`)}
+                  >
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg hover:border-[#D4AF37] transition-colors">
+                      <img src={imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-sm text-slate-600 text-center whitespace-nowrap font-medium">{c.name}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Aucune catégorie disponible</p>
+          </div>
+        )}
+      </section>
 
 
       {/* Événements à venir */}
@@ -170,25 +286,47 @@ const handleContact = async () => {
     Évènements à venir
   </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockWideEvents.slice(0, 9).map((e) => (
-            <Link
-              key={e.id}
-              to={`/events/${e.id}`}
-              className="block rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
-            >
-              <EventCard
-                title={e.title}
-                description={e.description}
-                imageUrl={e.imageUrl}
-                category={e.category}
-                start={e.start}
-                end={e.end}
-                isFavorite={e.isFavorite}
-              />
-            </Link>
-          ))}
-        </div>
+        {loadingEvents ? (
+          <div className="flex items-center justify-center py-12 col-span-full">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+            <span className="ml-2 text-muted-foreground">Chargement des événements...</span>
+          </div>
+        ) : events.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => {
+              // Obtenir le nom de la catégorie
+              let categoryName: string | undefined
+              if (event.category && typeof event.category === 'object' && 'name' in event.category) {
+                categoryName = event.category.name
+              } else if (event.category_uid) {
+                const category = categoryMap.get(event.category_uid)
+                categoryName = category?.name
+              }
+
+              return (
+                <Link
+                  key={event.uid}
+                  to={`/events/ev-${event.uid}`}
+                  className="block rounded-xl overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
+                >
+                  <EventCard
+                    title={event.title}
+                    description={event.description}
+                    imageUrl={event.image_url}
+                    category={categoryName}
+                    start={event.start_date}
+                    end={event.is_multi_day ? event.end_date : undefined}
+                    isFavorite={false}
+                  />
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12 col-span-full">
+            <p className="text-muted-foreground">Aucun événement disponible pour le moment</p>
+          </div>
+        )}
 
         <div className="mt-8 flex justify-center">
           <Link to="/events">

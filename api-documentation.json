@@ -1,0 +1,1971 @@
+{
+  "api": {
+    "name": "Event Management API",
+    "version": "1.0.0",
+    "description": "API pour la gestion d'événements et de tickets",
+    "baseUrl": "http://localhost:3001",
+    "apiPrefix": "/api",
+    "documentation": "/docs",
+    "healthCheck": "/health"
+  },
+  "authentication": {
+    "type": "Bearer Token (JWT)",
+    "header": "Authorization",
+    "format": "Bearer <token> ou <token>",
+    "description": "La plupart des endpoints nécessitent une authentification. Obtenez un token via /api/auth/register ou /api/auth/login",
+    "tokenPayload": {
+      "description": "Le JWT contient les informations suivantes dans son payload",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Identifiant unique de l'utilisateur (UUID)"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["USER", "ADMIN", "MODERATOR", "ORGANIZER"],
+          "description": "Rôle de l'utilisateur. Par défaut: USER"
+        }
+      },
+      "example": {
+        "uid": "550e8400-e29b-41d4-a716-446655440000",
+        "role": "USER"
+      },
+      "note": "Le token expire après 30 jours. Pour obtenir le rôle de l'utilisateur, vous pouvez décoder le JWT côté client ou appeler l'endpoint GET /api/auth/me"
+    }
+  },
+  "roles": {
+    "description": "Système de rôles pour la gestion des permissions",
+    "availableRoles": {
+      "USER": {
+        "description": "Utilisateur standard (rôle par défaut pour tous les nouveaux utilisateurs)",
+        "permissions": ["Accès aux fonctionnalités de base", "Gestion de son propre profil"]
+      },
+      "ADMIN": {
+        "description": "Administrateur avec tous les privilèges",
+        "permissions": ["Toutes les permissions", "Modification des rôles des utilisateurs", "Gestion complète du système"]
+      },
+      "MODERATOR": {
+        "description": "Modérateur avec des permissions de modération",
+        "permissions": ["Modération des contenus", "Gestion des événements"]
+      },
+      "ORGANIZER": {
+        "description": "Organisateur d'événements",
+        "permissions": ["Création et gestion d'événements", "Gestion des tickets"]
+      }
+    },
+    "note": "Seuls les utilisateurs avec le rôle ADMIN peuvent modifier le rôle d'un autre utilisateur via PUT /api/users/:uid"
+  },
+  "endpoints": {
+    "health": {
+      "path": "/health",
+      "method": "GET",
+      "description": "Vérifier l'état du serveur",
+      "authentication": false,
+      "request": {},
+      "response": {
+        "200": {
+          "status": "ok",
+          "timestamp": "string (ISO 8601)"
+        }
+      }
+    },
+    "auth": {
+      "register": {
+        "path": "/api/auth/register",
+        "method": "POST",
+        "description": "Créer un nouveau compte utilisateur",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email", "password", "first_name", "last_name"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email de l'utilisateur"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 6,
+                "description": "Mot de passe (minimum 6 caractères)"
+              },
+              "first_name": {
+                "type": "string",
+                "description": "Prénom"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "Nom de famille"
+              },
+              "phone": {
+                "type": "string",
+                "required": false,
+                "description": "Numéro de téléphone"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "message": "string",
+            "data": {
+              "user": {
+                "uid": "string",
+                "email": "string",
+                "first_name": "string",
+                "last_name": "string",
+                "role": "string (USER par défaut)"
+              },
+              "token": "string",
+              "otp": "string (dev only)"
+            }
+          }
+        }
+      },
+      "login": {
+        "path": "/api/auth/login",
+        "method": "POST",
+        "description": "Connexion utilisateur",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email", "password"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email"
+              },
+              "password": {
+                "type": "string",
+                "description": "Mot de passe"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "token": "string",
+              "user": {
+                "uid": "string",
+                "email": "string",
+                "first_name": "string",
+                "last_name": "string",
+                "role": "string (USER, ADMIN, MODERATOR, ORGANIZER)"
+              }
+            }
+          },
+          "403": {
+            "status": "error",
+            "message": "Votre compte a été désactivé. Veuillez contacter le service client pour plus d'informations.",
+            "code": "ACCOUNT_DISABLED"
+          }
+        },
+        "note": "Si le compte utilisateur a le statut 'DISABLED' ou 'INACTIVE', la connexion sera refusée avec le code ACCOUNT_DISABLED."
+      },
+      "me": {
+        "path": "/api/auth/me",
+        "method": "GET",
+        "description": "Obtenir les informations de l'utilisateur connecté",
+        "authentication": true,
+        "request": {},
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "role": "string (USER, ADMIN, MODERATOR, ORGANIZER)"
+            }
+          }
+        }
+      },
+      "verifyEmail": {
+        "path": "/api/auth/verify-email",
+        "method": "POST",
+        "description": "Vérifier l'email avec un code OTP",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email", "otp"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email à vérifier"
+              },
+              "otp": {
+                "type": "string",
+                "description": "Code OTP de vérification"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string"
+          }
+        }
+      },
+      "resendOTP": {
+        "path": "/api/auth/resend-otp",
+        "method": "POST",
+        "description": "Renvoyer un code OTP de vérification",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string",
+            "data": {
+              "otp": "string",
+              "emailSent": "boolean"
+            }
+          }
+        }
+      },
+      "googleAuth": {
+        "path": "/api/auth/google",
+        "method": "POST",
+        "description": "Connexion/Inscription via Google (avec token fourni directement)",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email"],
+            "properties": {
+              "id_token": {
+                "type": "string",
+                "required": false,
+                "description": "Token ID Google"
+              },
+              "access_token": {
+                "type": "string",
+                "required": false,
+                "description": "Token d'accès Google"
+              },
+              "google_id": {
+                "type": "string",
+                "required": false,
+                "description": "ID Google de l'utilisateur"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email"
+              },
+              "name": {
+                "type": "string",
+                "required": false,
+                "description": "Nom complet"
+              },
+              "picture": {
+                "type": "string",
+                "required": false,
+                "description": "URL de la photo de profil"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "user": {
+                "uid": "string",
+                "email": "string",
+                "first_name": "string",
+                "last_name": "string",
+                "role": "string (USER par défaut)"
+              },
+              "token": "string"
+            }
+          },
+          "403": {
+            "status": "error",
+            "message": "Votre compte a été désactivé. Veuillez contacter le service client pour plus d'informations.",
+            "code": "ACCOUNT_DISABLED"
+          }
+        },
+        "note": "Si le compte utilisateur a le statut 'DISABLED' ou 'INACTIVE', l'authentification sera refusée avec le code ACCOUNT_DISABLED."
+      },
+      "googleRedirect": {
+        "path": "/api/auth/google/redirect",
+        "method": "GET",
+        "description": "Redirige vers Google OAuth pour l'authentification. C'est le point d'entrée du flux OAuth complet.",
+        "authentication": false,
+        "request": {},
+        "response": {
+          "302": {
+            "description": "Redirection vers Google OAuth",
+            "location": "URL Google OAuth"
+          }
+        },
+        "note": "Cette route redirige l'utilisateur vers Google pour l'authentification. Après authentification, Google redirige vers /api/auth/google/callback"
+      },
+      "googleCallback": {
+        "path": "/api/auth/google/callback",
+        "method": "GET",
+        "description": "Callback Google OAuth - reçoit le code d'autorisation de Google, échange le code contre un token, récupère les infos utilisateur, et redirige vers le frontend avec le token JWT.",
+        "authentication": false,
+        "request": {
+          "query": {
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Code d'autorisation fourni par Google"
+              },
+              "state": {
+                "type": "string",
+                "description": "State passé lors de la redirection (URL frontend)"
+              },
+              "error": {
+                "type": "string",
+                "description": "Erreur éventuelle de Google"
+              }
+            }
+          }
+        },
+        "response": {
+          "302": {
+            "description": "Redirection vers le frontend avec le token JWT ou une erreur",
+            "location": "http://localhost:5173/auth/google/callback?token=...&email=...&uid=...&role=... OU ?error=..."
+          }
+        },
+        "note": "Cette route est appelée automatiquement par Google après authentification. Elle redirige vers le frontend avec les paramètres suivants dans l'URL : token (JWT), email, uid, role. Si le compte est désactivé (status = 'DISABLED' ou 'INACTIVE'), elle redirige avec un paramètre error contenant le message d'erreur."
+      },
+      "changePassword": {
+        "path": "/api/auth/change-password",
+        "method": "POST",
+        "description": "Changer le mot de passe en connaissant l'ancien mot de passe",
+        "authentication": true,
+        "request": {
+          "body": {
+            "required": ["oldPassword", "newPassword"],
+            "properties": {
+              "oldPassword": {
+                "type": "string",
+                "description": "Ancien mot de passe"
+              },
+              "newPassword": {
+                "type": "string",
+                "minLength": 6,
+                "description": "Nouveau mot de passe (minimum 6 caractères)"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string"
+          }
+        }
+      },
+      "forgotPassword": {
+        "path": "/api/auth/forgot-password",
+        "method": "POST",
+        "description": "Demander une réinitialisation du mot de passe. Envoie un code OTP par email.",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email du compte"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string",
+            "data": {
+              "emailSent": "boolean"
+            }
+          }
+        },
+        "note": "Pour des raisons de sécurité, le code OTP n'est jamais renvoyé dans la réponse. Il est uniquement envoyé par email à l'adresse fournie."
+      },
+      "resetPassword": {
+        "path": "/api/auth/reset-password",
+        "method": "POST",
+        "description": "Réinitialiser le mot de passe avec le code OTP reçu par email",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["email", "otp", "newPassword"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Adresse email du compte"
+              },
+              "otp": {
+                "type": "string",
+                "description": "Code OTP reçu par email (valide 15 minutes)"
+              },
+              "newPassword": {
+                "type": "string",
+                "minLength": 6,
+                "description": "Nouveau mot de passe (minimum 6 caractères)"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string"
+          }
+        }
+      }
+    },
+    "categories": {
+      "getAll": {
+        "path": "/api/categories",
+        "method": "GET",
+        "description": "Obtenir la liste des catégories",
+        "authentication": false,
+        "request": {
+          "query": {
+            "properties": {
+              "active": {
+                "type": "boolean",
+                "required": false,
+                "description": "Filtrer par statut actif"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "array"
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/categories/:uid",
+        "method": "GET",
+        "description": "Obtenir une catégorie par son UID",
+        "authentication": false,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de la catégorie"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "create": {
+        "path": "/api/categories",
+        "method": "POST",
+        "description": "Créer une nouvelle catégorie",
+        "authentication": true,
+        "request": {
+          "body": {
+            "required": ["name", "slug", "active"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nom de la catégorie"
+              },
+              "slug": {
+                "type": "string",
+                "description": "Slug unique de la catégorie"
+              },
+              "description": {
+                "type": "string",
+                "required": false,
+                "description": "Description de la catégorie"
+              },
+              "active": {
+                "type": "boolean",
+                "description": "Statut actif/inactif"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "update": {
+        "path": "/api/categories/:uid",
+        "method": "PUT",
+        "description": "Mettre à jour une catégorie",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de la catégorie"
+              }
+            }
+          },
+          "body": {
+            "properties": {
+              "name": {
+                "type": "string",
+                "required": false
+              },
+              "slug": {
+                "type": "string",
+                "required": false
+              },
+              "description": {
+                "type": "string",
+                "required": false
+              },
+              "active": {
+                "type": "boolean",
+                "required": false
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "delete": {
+        "path": "/api/categories/:uid",
+        "method": "DELETE",
+        "description": "Supprimer une catégorie (soft delete). La catégorie est marquée comme supprimée avec deleted_at mais reste en base de données. Elle n'apparaîtra plus dans les listes. La suppression est impossible si la catégorie est encore utilisée par des événements actifs.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de la catégorie"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "message": "Catégorie supprimée avec succès"
+          },
+          "404": {
+            "status": "error",
+            "message": "Catégorie non trouvée"
+          },
+          "409": {
+            "status": "error",
+            "message": "Impossible de supprimer cette catégorie car elle est encore utilisée par des événements. Veuillez d'abord supprimer ou modifier les événements associés.",
+            "code": "CATEGORY_IN_USE"
+          }
+        },
+        "note": "Soft delete : La catégorie est marquée comme supprimée (deleted_at) mais reste en base de données. Elle ne sera plus visible dans les listes. Si la catégorie est utilisée par des événements actifs, la suppression sera refusée pour maintenir l'intégrité référentielle."
+      }
+    },
+    "events": {
+      "getAll": {
+        "path": "/api/events",
+        "method": "GET",
+        "description": "Obtenir la liste des événements",
+        "authentication": false,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1,
+                "description": "Numéro de page"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10,
+                "description": "Nombre d'éléments par page"
+              },
+              "category_uid": {
+                "type": "string",
+                "required": false,
+                "description": "Filtrer par catégorie"
+              },
+              "status": {
+                "type": "string",
+                "required": false,
+                "description": "Filtrer par statut"
+              },
+              "search": {
+                "type": "string",
+                "required": false,
+                "description": "Recherche textuelle"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "array"
+          }
+        }
+      },
+      "getEventsByCategory": {
+        "path": "/api/events/category/:category_uid",
+        "method": "GET",
+        "description": "Obtenir les événements d'une catégorie spécifique",
+        "authentication": false,
+        "request": {
+          "params": {
+            "properties": {
+              "category_uid": {
+                "type": "string",
+                "description": "UID de la catégorie"
+              }
+            }
+          },
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1,
+                "description": "Numéro de page"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10,
+                "description": "Nombre d'éléments par page"
+              },
+              "status": {
+                "type": "string",
+                "required": false,
+                "description": "Filtrer par statut de l'événement"
+              },
+              "search": {
+                "type": "string",
+                "required": false,
+                "description": "Recherche textuelle dans le titre, description ou lieu"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "category": {
+                "uid": "string",
+                "name": "string",
+                "slug": "string",
+                "active": "boolean"
+              },
+              "events": "array"
+            },
+            "pagination": {
+              "page": "integer",
+              "limit": "integer",
+              "total": "integer",
+              "totalPages": "integer"
+            }
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/events/:uid",
+        "method": "GET",
+        "description": "Obtenir un événement par son UID",
+        "authentication": false,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "create": {
+        "path": "/api/events",
+        "method": "POST",
+        "description": "Créer un nouvel événement",
+        "authentication": true,
+        "request": {
+          "body": {
+            "required": ["title", "description", "start_date", "end_date", "location", "is_free", "is_multi_day", "status"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Titre de l'événement"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description de l'événement"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Date de début (ISO 8601)"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Date de fin (ISO 8601)"
+              },
+              "location": {
+                "type": "string",
+                "description": "Lieu de l'événement"
+              },
+              "latitude": {
+                "type": "number",
+                "required": false,
+                "description": "Latitude GPS"
+              },
+              "longitude": {
+                "type": "number",
+                "required": false,
+                "description": "Longitude GPS"
+              },
+              "category_uid": {
+                "type": "string",
+                "required": false,
+                "description": "UID de la catégorie"
+              },
+              "is_free": {
+                "type": "boolean",
+                "description": "Événement gratuit ou payant"
+              },
+              "is_multi_day": {
+                "type": "boolean",
+                "description": "Événement sur plusieurs jours"
+              },
+              "status": {
+                "type": "string",
+                "description": "Statut (ACTIVE, INACTIVE, etc.)"
+              },
+              "image_url": {
+                "type": "string",
+                "required": false,
+                "description": "URL de l'image"
+              },
+              "organizer": {
+                "type": "string",
+                "required": false,
+                "description": "Nom de l'organisateur"
+              },
+              "max_capacity": {
+                "type": "integer",
+                "required": false,
+                "description": "Capacité maximale"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "update": {
+        "path": "/api/events/:uid",
+        "method": "PUT",
+        "description": "Mettre à jour un événement",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          },
+          "body": {
+            "properties": {
+              "title": {
+                "type": "string",
+                "required": false
+              },
+              "description": {
+                "type": "string",
+                "required": false
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date-time",
+                "required": false
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date-time",
+                "required": false
+              },
+              "location": {
+                "type": "string",
+                "required": false
+              },
+              "latitude": {
+                "type": "number",
+                "required": false
+              },
+              "longitude": {
+                "type": "number",
+                "required": false
+              },
+              "category_uid": {
+                "type": "string",
+                "required": false
+              },
+              "is_free": {
+                "type": "boolean",
+                "required": false
+              },
+              "is_multi_day": {
+                "type": "boolean",
+                "required": false
+              },
+              "status": {
+                "type": "string",
+                "required": false
+              },
+              "image_url": {
+                "type": "string",
+                "required": false
+              },
+              "organizer": {
+                "type": "string",
+                "required": false
+              },
+              "max_capacity": {
+                "type": "integer",
+                "required": false
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "delete": {
+        "path": "/api/events/:uid",
+        "method": "DELETE",
+        "description": "Supprimer un événement (soft delete). L'événement est marqué comme supprimé avec deleted_at mais reste en base de données. Il n'apparaîtra plus dans les listes, favoris ou inscriptions.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "Événement supprimé avec succès"
+          },
+          "404": {
+            "status": "error",
+            "message": "Événement non trouvé"
+          }
+        },
+        "note": "Soft delete : L'événement est marqué comme supprimé (deleted_at) mais reste en base de données. Il ne sera plus visible dans les listes, favoris ou inscriptions des utilisateurs."
+      },
+      "registerFree": {
+        "path": "/api/events/:uid/register-free",
+        "method": "POST",
+        "description": "S'inscrire à un événement gratuit",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string",
+            "data": "object"
+          }
+        }
+      },
+      "unregisterFree": {
+        "path": "/api/events/:uid/register-free",
+        "method": "DELETE",
+        "description": "Se désinscrire d'un événement gratuit",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string"
+          }
+        }
+      },
+      "checkFreeRegistration": {
+        "path": "/api/events/:uid/register-free/check",
+        "method": "GET",
+        "description": "Vérifier si l'utilisateur est inscrit à un événement gratuit",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "is_registered": "boolean",
+              "registration_date": "string (ISO 8601) ou null"
+            }
+          }
+        }
+      },
+      "getMyFreeRegistrations": {
+        "path": "/api/events/my-free-registrations",
+        "method": "GET",
+        "description": "Obtenir la liste des événements gratuits auxquels je suis inscrit",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "registration": {
+                "uid": "string",
+                "status": "string",
+                "registration_date": "string",
+                "created_at": "string"
+              },
+              "event": "object ou null"
+            },
+            "pagination": {
+              "page": "integer",
+              "limit": "integer",
+              "total": "integer",
+              "totalPages": "integer"
+            }
+          }
+        }
+      },
+      "getEventRegistrations": {
+        "path": "/api/events/:uid/registrations",
+        "method": "GET",
+        "description": "Obtenir la liste des inscrits à un événement (avec leurs informations utilisateur)",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          },
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1,
+                "description": "Numéro de page"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10,
+                "description": "Nombre d'éléments par page"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["REGISTERED", "CANCELLED"],
+                "default": "REGISTERED",
+                "description": "Filtrer par statut d'inscription"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "event": {
+                "uid": "string",
+                "title": "string",
+                "is_free": "boolean"
+              },
+              "registrations": [
+                {
+                  "registration": {
+                    "uid": "string",
+                    "status": "string",
+                    "registration_date": "string (ISO 8601)",
+                    "cancelled_at": "string (ISO 8601) ou null",
+                    "created_at": "string (ISO 8601)",
+                    "updated_at": "string (ISO 8601)"
+                  },
+                  "user": {
+                    "uid": "string",
+                    "email": "string",
+                    "first_name": "string",
+                    "last_name": "string",
+                    "phone": "string ou null",
+                    "profile_picture_url": "string ou null",
+                    "role": "string"
+                  }
+                }
+              ]
+            },
+            "pagination": {
+              "page": "integer",
+              "limit": "integer",
+              "total": "integer",
+              "totalPages": "integer"
+            }
+          }
+        }
+      },
+      "addToFavorites": {
+        "path": "/api/events/:uid/favorite",
+        "method": "POST",
+        "description": "Ajouter un événement aux favoris",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "message": "string",
+            "data": {
+              "favorite": {
+                "uid": "string",
+                "event_uid": "string",
+                "created_at": "string"
+              }
+            }
+          }
+        }
+      },
+      "removeFromFavorites": {
+        "path": "/api/events/:uid/favorite",
+        "method": "DELETE",
+        "description": "Retirer un événement des favoris",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string"
+          }
+        }
+      },
+      "checkFavorite": {
+        "path": "/api/events/:uid/favorite/check",
+        "method": "GET",
+        "description": "Vérifier si un événement est en favoris",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "is_favorite": "boolean",
+              "added_at": "string (ISO 8601) ou null"
+            }
+          }
+        }
+      },
+      "getMyFavorites": {
+        "path": "/api/events/my-favorites",
+        "method": "GET",
+        "description": "Obtenir la liste de mes événements favoris",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "array",
+            "pagination": {
+              "page": "integer",
+              "limit": "integer",
+              "total": "integer",
+              "totalPages": "integer"
+            }
+          }
+        }
+      }
+    },
+    "users": {
+      "getAll": {
+        "path": "/api/users",
+        "method": "GET",
+        "description": "Obtenir la liste des utilisateurs",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "phone": "string",
+              "profile_picture_url": "string",
+              "status": "string",
+              "role": "string",
+              "sport_preference": "string (category_uid) ou null",
+              "created_at": "string"
+            },
+            "pagination": {
+              "page": "integer",
+              "limit": "integer",
+              "total": "integer",
+              "totalPages": "integer"
+            }
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/users/:uid",
+        "method": "GET",
+        "description": "Obtenir un utilisateur par son UID",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'utilisateur"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "phone": "string",
+              "profile_picture_url": "string",
+              "status": "string",
+              "role": "string",
+              "sport_preference": "string (category_uid) ou null",
+              "emailVerified": "boolean",
+              "phoneVerified": "boolean",
+              "created_at": "string",
+              "updated_at": "string"
+            }
+          }
+        }
+      },
+      "update": {
+        "path": "/api/users/:uid",
+        "method": "PUT",
+        "description": "Mettre à jour un utilisateur",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'utilisateur"
+              }
+            }
+          },
+          "body": {
+            "properties": {
+              "first_name": {
+                "type": "string",
+                "required": false
+              },
+              "last_name": {
+                "type": "string",
+                "required": false
+              },
+              "phone": {
+                "type": "string",
+                "required": false
+              },
+              "profile_picture_url": {
+                "type": "string",
+                "required": false
+              },
+              "role": {
+                "type": "string",
+                "enum": ["USER", "ADMIN", "MODERATOR", "ORGANIZER"],
+                "required": false,
+                "description": "Rôle de l'utilisateur (modifiable uniquement par un ADMIN)"
+              },
+              "sport_preference": {
+                "type": "string",
+                "required": false,
+                "description": "UID de la catégorie de préférence sportive"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "phone": "string",
+              "profile_picture_url": "string",
+              "status": "string",
+              "role": "string",
+              "sport_preference": "string (category_uid) ou null",
+              "updated_at": "string"
+            }
+          }
+        }
+      },
+      "disable": {
+        "path": "/api/users/:uid/disable",
+        "method": "POST",
+        "description": "Désactiver un compte utilisateur (met automatiquement le statut à DISABLED). Endpoint simplifié qui ne nécessite pas de body.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'utilisateur à désactiver"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "message": "Compte utilisateur désactivé avec succès",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "status": "DISABLED",
+              "updated_at": "string"
+            }
+          },
+          "400": {
+            "status": "error",
+            "message": "Vous ne pouvez pas désactiver votre propre compte OU Le compte est déjà désactivé"
+          },
+          "404": {
+            "status": "error",
+            "message": "Utilisateur non trouvé"
+          }
+        },
+        "note": "Endpoint simplifié pour désactiver un compte. Le compte ne sera pas supprimé mais son statut sera mis à DISABLED. L'utilisateur ne pourra plus se connecter et recevra le message 'Votre compte a été désactivé. Veuillez contacter le service client pour plus d'informations.'"
+      },
+      "enable": {
+        "path": "/api/users/:uid/enable",
+        "method": "POST",
+        "description": "Réactiver un compte utilisateur (met automatiquement le statut à ACTIVE). Endpoint simplifié qui ne nécessite pas de body.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'utilisateur à réactiver"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "message": "Compte utilisateur réactivé avec succès",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "status": "ACTIVE",
+              "updated_at": "string"
+            }
+          },
+          "400": {
+            "status": "error",
+            "message": "Le compte est déjà actif"
+          },
+          "404": {
+            "status": "error",
+            "message": "Utilisateur non trouvé"
+          }
+        },
+        "note": "Endpoint simplifié pour réactiver un compte. Le statut sera mis à ACTIVE et l'utilisateur pourra à nouveau se connecter."
+      },
+      "updateStatus": {
+        "path": "/api/users/:uid/status",
+        "method": "PATCH",
+        "description": "Désactiver ou réactiver un compte utilisateur en modifiant son statut. Permet de changer le statut entre ACTIVE, DISABLED, ou INACTIVE. Pour une utilisation simplifiée, préférez POST /api/users/:uid/disable ou POST /api/users/:uid/enable.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de l'utilisateur"
+              }
+            }
+          },
+          "body": {
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["ACTIVE", "DISABLED", "INACTIVE"],
+                "description": "Nouveau statut du compte"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "Compte utilisateur désactivé/réactivé avec succès",
+            "data": {
+              "uid": "string",
+              "email": "string",
+              "first_name": "string",
+              "last_name": "string",
+              "status": "string",
+              "updated_at": "string"
+            }
+          },
+          "400": {
+            "status": "error",
+            "message": "Vous ne pouvez pas désactiver votre propre compte OU Le compte a déjà le statut demandé OU Statut invalide. Les statuts valides sont: ACTIVE, DISABLED, INACTIVE",
+            "examples": [
+              "Vous ne pouvez pas désactiver votre propre compte",
+              "Le compte a déjà le statut 'DISABLED'",
+              "Statut invalide. Les statuts valides sont: ACTIVE, DISABLED, INACTIVE"
+            ]
+          },
+          "404": {
+            "status": "error",
+            "message": "Utilisateur non trouvé"
+          }
+        },
+        "note": "Désactivation/Réactivation : Le compte n'est pas supprimé mais son statut est modifié. Si le statut est 'DISABLED' ou 'INACTIVE', l'utilisateur ne pourra plus se connecter via login ou Google OAuth et recevra le message 'Votre compte a été désactivé. Veuillez contacter le service client pour plus d'informations.' Pour réactiver, utilisez PATCH avec status: 'ACTIVE'."
+      }
+    },
+    "tickets": {
+      "getAll": {
+        "path": "/api/tickets",
+        "method": "GET",
+        "description": "Obtenir la liste des tickets de l'utilisateur",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              },
+              "status": {
+                "type": "string",
+                "required": false
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "array"
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/tickets/:uid",
+        "method": "GET",
+        "description": "Obtenir un ticket par son UID",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID du ticket"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "create": {
+        "path": "/api/tickets",
+        "method": "POST",
+        "description": "Acheter un ticket",
+        "authentication": true,
+        "request": {
+          "body": {
+            "required": ["event_uid", "ticket_type_uid"],
+            "properties": {
+              "event_uid": {
+                "type": "string",
+                "description": "UID de l'événement"
+              },
+              "ticket_type_uid": {
+                "type": "string",
+                "description": "UID du type de ticket"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "validate": {
+        "path": "/api/tickets/:uid/validate",
+        "method": "POST",
+        "description": "Valider un ticket",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID du ticket"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "message": "string",
+            "data": "object"
+          }
+        }
+      }
+    },
+    "transactions": {
+      "getAll": {
+        "path": "/api/transactions",
+        "method": "GET",
+        "description": "Obtenir la liste des transactions de l'utilisateur",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              },
+              "status": {
+                "type": "string",
+                "required": false
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "array"
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/transactions/:uid",
+        "method": "GET",
+        "description": "Obtenir une transaction par son UID",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de la transaction"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "create": {
+        "path": "/api/transactions",
+        "method": "POST",
+        "description": "Créer une transaction de paiement",
+        "authentication": true,
+        "request": {
+          "body": {
+            "required": ["ticket_uid", "amount", "payment_method", "currency"],
+            "properties": {
+              "ticket_uid": {
+                "type": "string",
+                "description": "UID du ticket"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Montant de la transaction"
+              },
+              "payment_method": {
+                "type": "string",
+                "enum": ["MOBILE_MONEY", "BANK_CARD", "BANK_TRANSFER", "CASH"],
+                "description": "Méthode de paiement"
+              },
+              "currency": {
+                "type": "string",
+                "description": "Devise (ex: XOF, EUR, USD)"
+              },
+              "payment_reference": {
+                "type": "string",
+                "required": false,
+                "description": "Référence de paiement"
+              },
+              "payment_gateway": {
+                "type": "string",
+                "required": false,
+                "description": "Passerelle de paiement"
+              },
+              "gateway_transaction_id": {
+                "type": "string",
+                "required": false,
+                "description": "ID de transaction de la passerelle"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      },
+      "updateStatus": {
+        "path": "/api/transactions/:uid/status",
+        "method": "PUT",
+        "description": "Mettre à jour le statut d'une transaction",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID de la transaction"
+              }
+            }
+          },
+          "body": {
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["PENDING", "COMPLETED", "FAILED", "CANCELLED", "REFUNDED"],
+                "description": "Nouveau statut de la transaction"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "string",
+            "data": "object"
+          }
+        }
+      }
+    }
+  },
+  "errorResponses": {
+    "400": {
+      "status": "error",
+      "message": "Bad Request - Les données fournies sont invalides"
+    },
+    "401": {
+      "status": "error",
+      "error": "Token manquant ou invalide",
+      "message": "Le header Authorization est requis. Format: 'Bearer <token>' ou simplement '<token>'"
+    },
+    "403": {
+      "status": "error",
+      "message": "Forbidden - Accès refusé",
+      "examples": {
+        "ACCOUNT_DISABLED": {
+          "status": "error",
+          "message": "Votre compte a été désactivé. Veuillez contacter le service client pour plus d'informations.",
+          "code": "ACCOUNT_DISABLED"
+        },
+        "EMAIL_NOT_VERIFIED": {
+          "status": "error",
+          "message": "Votre email n'a pas été vérifié. Veuillez vérifier votre email avant de vous connecter.",
+          "code": "EMAIL_NOT_VERIFIED"
+        }
+      }
+    },
+    "404": {
+      "status": "error",
+      "message": "Not Found - Ressource introuvable"
+    },
+    "500": {
+      "status": "error",
+      "message": "Internal Server Error - Erreur serveur"
+    }
+  },
+  "examples": {
+    "register": {
+      "request": {
+        "url": "POST /api/auth/register",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "email": "user@example.com",
+          "password": "SecurePass123",
+          "first_name": "John",
+          "last_name": "Doe",
+          "phone": "+1234567890"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "status": "success",
+          "message": "Utilisateur créé avec succès",
+          "data": {
+            "user": {
+              "uid": "uuid-here",
+              "email": "user@example.com",
+              "first_name": "John",
+              "last_name": "Doe",
+              "role": "USER"
+            },
+            "token": "jwt-token-here"
+          }
+        }
+      }
+    },
+    "createEvent": {
+      "request": {
+        "url": "POST /api/events",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "body": {
+          "title": "Concert de Jazz",
+          "description": "Un magnifique concert de jazz en plein air",
+          "start_date": "2024-12-25T19:00:00Z",
+          "end_date": "2024-12-25T22:00:00Z",
+          "location": "Parc Central, Paris",
+          "latitude": 48.8566,
+          "longitude": 2.3522,
+          "is_free": true,
+          "is_multi_day": false,
+          "status": "ACTIVE",
+          "organizer": "Jazz Events",
+          "max_capacity": 500
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "status": "success",
+          "data": {
+            "uid": "event-uuid-here",
+            "title": "Concert de Jazz",
+            "created_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      }
+    },
+    "disableUser": {
+      "request": {
+        "url": "POST /api/users/:uid/disable",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "user-uuid-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Compte utilisateur désactivé avec succès",
+          "data": {
+            "uid": "user-uuid-here",
+            "email": "user@example.com",
+            "first_name": "John",
+            "last_name": "Doe",
+            "status": "DISABLED",
+            "updated_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      },
+      "note": "Endpoint simplifié pour désactiver un compte. Aucun body requis."
+    },
+    "enableUser": {
+      "request": {
+        "url": "POST /api/users/:uid/enable",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "user-uuid-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Compte utilisateur réactivé avec succès",
+          "data": {
+            "uid": "user-uuid-here",
+            "email": "user@example.com",
+            "first_name": "John",
+            "last_name": "Doe",
+            "status": "ACTIVE",
+            "updated_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      },
+      "note": "Endpoint simplifié pour réactiver un compte. Aucun body requis."
+    },
+    "updateUserStatus": {
+      "request": {
+        "url": "PATCH /api/users/:uid/status",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "user-uuid-here"
+        },
+        "body": {
+          "status": "DISABLED"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Compte utilisateur désactivé avec succès",
+          "data": {
+            "uid": "user-uuid-here",
+            "email": "user@example.com",
+            "first_name": "John",
+            "last_name": "Doe",
+            "status": "DISABLED",
+            "updated_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      },
+      "note": "Endpoint générique pour changer le statut. Pour une utilisation simplifiée, préférez POST /api/users/:uid/disable ou POST /api/users/:uid/enable"
+    },
+    "deleteCategory": {
+      "request": {
+        "url": "DELETE /api/categories/:uid",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "category-uuid-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Catégorie supprimée avec succès"
+        }
+      },
+      "note": "Soft delete : La catégorie reste en base de données mais n'apparaît plus dans les listes"
+    },
+    "deleteEvent": {
+      "request": {
+        "url": "DELETE /api/events/:uid",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "event-uuid-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Événement supprimé avec succès"
+        }
+      },
+      "note": "Soft delete : L'événement reste en base de données mais n'apparaît plus dans les listes, favoris ou inscriptions"
+    }
+  },
+  "notes": {
+    "authentication": "La plupart des endpoints nécessitent un token JWT. Obtenez-le via /api/auth/register ou /api/auth/login. Le JWT contient l'uid et le rôle de l'utilisateur dans son payload, ce qui permet de faire des redirections basées sur le rôle côté frontend sans appeler l'API.",
+    "pagination": "Les endpoints de liste (getAll) supportent la pagination avec les paramètres 'page' et 'limit'",
+    "dateFormat": "Les dates doivent être au format ISO 8601 (ex: 2024-12-25T19:00:00Z)",
+    "uid": "Tous les identifiants utilisent des UID (UUID) plutôt que des IDs numériques",
+    "swagger": "Une documentation Swagger interactive est disponible à /docs lorsque le serveur est démarré",
+    "roles": "Les rôles disponibles sont : USER (par défaut), ADMIN, MODERATOR, ORGANIZER. Seuls les ADMIN peuvent modifier le rôle d'un utilisateur via PUT /api/users/:uid. Le rôle est inclus dans le JWT pour permettre des redirections basées sur le rôle côté client.",
+    "jwtDecoding": "Pour décoder le JWT côté client et obtenir le rôle : const payload = JSON.parse(atob(token.split('.')[1])); const role = payload.role; Note: Si un utilisateur change de rôle, il doit se reconnecter pour obtenir un nouveau token avec le rôle mis à jour.",
+    "softDelete": "Les endpoints DELETE pour categories et events utilisent le soft delete : les éléments sont marqués avec deleted_at mais restent en base de données. Ils ne seront plus visibles dans les listes mais peuvent être restaurés en mettant deleted_at à null.",
+    "userDeactivation": "Pour désactiver/réactiver un utilisateur, utilisez POST /api/users/:uid/disable (pour désactiver) ou POST /api/users/:uid/enable (pour réactiver). Ces endpoints simplifiés ne nécessitent pas de body. Alternative : PATCH /api/users/:uid/status avec { \"status\": \"DISABLED\" } ou { \"status\": \"ACTIVE\" }. Les utilisateurs avec status DISABLED ou INACTIVE ne peuvent plus se connecter et reçoivent un message pour contacter le service client."
+  }
+}
+

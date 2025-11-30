@@ -10,6 +10,8 @@ import {
   Package2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const mainMenu = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -25,8 +27,30 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation()
+  const { user } = useAuth()
 
- const isActive = (href: string) => location.pathname === href
+  const isActive = (href: string) => location.pathname === href
+
+  // Fonctions pour obtenir les informations de l'utilisateur
+  const getInitials = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase()
+    }
+    return "U"
+  }
+
+  const getDisplayName = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name} ${user.last_name}`
+    }
+    if (user?.email) {
+      return user.email.split('@')[0]
+    }
+    return "Utilisateur"
+  }
 
 
   return (
@@ -97,14 +121,20 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border min-w-56">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent/10 transition-colors cursor-pointer">
-          <div className="w-7 h-7 rounded bg-sidebar-primary flex items-center justify-center text-xs font-bold text-sidebar-primary-foreground flex-shrink-0">
-            SN
-          </div>
+          <Avatar className="w-7 h-7 rounded-lg flex-shrink-0">
+            <AvatarImage src={user?.profile_picture_url} alt={getDisplayName()} />
+            <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
+              {getInitials()}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-sidebar-foreground">satnaing</p>
-            <p className="text-xs text-sidebar-foreground/50 truncate">satnaingdev@gmail.com</p>
+            <p className="text-xs font-semibold text-sidebar-foreground truncate">
+              {user ? getDisplayName() : "Chargement..."}
+            </p>
+            <p className="text-xs text-sidebar-foreground/50 truncate">
+              {user?.email || ""}
+            </p>
           </div>
-       
         </div>
       </div>
     </aside>

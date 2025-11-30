@@ -1,8 +1,8 @@
 "use client"
 
 import {PanelLeftIcon} from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { ModeToggle } from "./mode-toogle"
+import { UserProfileButton } from "./UserProfileButton"
 
 
 interface TopNavProps {
@@ -25,9 +25,7 @@ export default function TopNav({ onToggleSidebar }: TopNavProps) {
         {/* Right side - Icons */}
         <div className="flex items-center gap-2">
           <ModeToggle/>
-          <Button variant="ghost" size="sm" className="w-9 h-9 rounded-full bg-foreground text-background font-semibold">
-          SN
-        </Button>
+          <UserProfileButton />
         </div>
       </div>
     </div>

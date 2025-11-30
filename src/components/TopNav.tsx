@@ -1,7 +1,7 @@
 import { Search} from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { ModeToggle } from './mode-toogle';
+import { UserProfileButton } from './UserProfileButton';
 
 export function TopNav() {
   return (
@@ -16,10 +16,7 @@ export function TopNav() {
           <Input type="text" placeholder="Search" className="pl-10 w-64 h-9" />
         </div>
         <ModeToggle/>
-        
-        <Button variant="ghost" size="sm" className="w-9 h-9 rounded-full bg-foreground text-background font-semibold">
-          SN
-        </Button>
+        <UserProfileButton />
       </div>
     </header>
   )
