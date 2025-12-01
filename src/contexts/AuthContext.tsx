@@ -16,26 +16,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  // Charger l'utilisateur au démarrage si un token existe
+  // Charger l'utilisateur en arrière-plan si un token existe
   useEffect(() => {
     const loadUser = async () => {
       if (hasAuthToken()) {
+        // Ne pas bloquer l'UI, vérifier en arrière-plan
         try {
           const response = await authService.me()
           if (response.data) {
             setUser(response.data)
           }
         } catch (error) {
-          // Token invalide ou expiré
+          // Token invalide ou expiré - nettoyer en arrière-plan
           console.error('Erreur lors du chargement de l\'utilisateur:', error)
           authService.logout()
+          setUser(null)
         }
       }
-      setLoading(false)
     }
 
+    // Exécuter la vérification sans bloquer
     loadUser()
   }, [])
 
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        loading: false, // Toujours false car la vérification se fait en arrière-plan
         isAuthenticated: !!user,
         login,
         logout,
