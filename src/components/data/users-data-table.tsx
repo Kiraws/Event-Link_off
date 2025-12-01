@@ -17,7 +17,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { ArrowUpDown, MoreHorizontal, Settings2, Loader2, Image as ImageIcon } from "lucide-react"
-import { usersService, type User as ApiUser } from "../../../api"
+import { usersService } from "../../../api"
+import type { User as ApiUser } from "../../../api/users.service"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

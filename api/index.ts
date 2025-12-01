@@ -61,6 +61,15 @@ export { TransactionsService, type Transaction, type CreateTransactionRequest, t
 export * from './dashboard.service';
 export { DashboardService, type DashboardStats } from './dashboard.service';
 
+export * from './contact.service';
+export { 
+  ContactService, 
+  type ContactMessage, 
+  type SendContactMessageRequest, 
+  type ReplyContactMessageRequest,
+  type GetContactMessagesParams
+} from './contact.service';
+
 // Import des classes pour créer les instances
 import { AuthService } from './auth.service';
 import { CategoriesService } from './categories.service';
@@ -69,6 +78,7 @@ import { UsersService } from './users.service';
 import { TicketsService } from './tickets.service';
 import { TransactionsService } from './transactions.service';
 import { DashboardService } from './dashboard.service';
+import { ContactService } from './contact.service';
 
 /**
  * Instance unique de chaque service pour faciliter l'utilisation
@@ -80,3 +90,4 @@ export const usersService = new UsersService();
 export const ticketsService = new TicketsService();
 export const transactionsService = new TransactionsService();
 export const dashboardService = new DashboardService();
+export const contactService = new ContactService();

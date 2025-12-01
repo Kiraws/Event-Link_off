@@ -1592,6 +1592,348 @@
         }
       }
     },
+    "dashboard": {
+      "getStats": {
+        "path": "/api/dashboard",
+        "method": "GET",
+        "description": "Obtenir les statistiques du dashboard (réservé aux administrateurs et modérateurs)",
+        "authentication": true,
+        "request": {},
+        "response": {
+          "200": {
+            "status": "success",
+            "data": {
+              "users": {
+                "total": "number",
+                "active": "number",
+                "disabled": "number",
+                "email_verified": "number",
+                "by_role": [
+                  {
+                    "role": "string",
+                    "count": "number"
+                  }
+                ]
+              },
+              "events": {
+                "total": "number",
+                "active": "number",
+                "published": "number",
+                "upcoming": "number",
+                "past": "number",
+                "free": "number",
+                "paid": "number",
+                "by_category": [
+                  {
+                    "category": {
+                      "uid": "string",
+                      "name": "string"
+                    },
+                    "events_count": "number"
+                  }
+                ],
+                "popular": [
+                  {
+                    "event": {
+                      "uid": "string",
+                      "title": "string",
+                      "start_date": "string",
+                      "location": "string",
+                      "is_free": "boolean"
+                    },
+                    "registrations_count": "number"
+                  }
+                ]
+              },
+              "registrations": {
+                "total": "number",
+                "active": "number",
+                "cancelled": "number",
+                "this_month": "number"
+              },
+              "favorites": {
+                "total": "number"
+              },
+              "tickets": {
+                "total": "number",
+                "validated": "number",
+                "pending": "number",
+                "this_month": "number"
+              },
+              "transactions": {
+                "total": "number",
+                "successful": "number",
+                "pending": "number",
+                "total_revenue": "number",
+                "revenue_this_month": "number"
+              },
+              "categories": {
+                "total": "number",
+                "active": "number"
+              }
+            }
+          },
+          "403": {
+            "status": "error",
+            "message": "Accès refusé. Seuls les administrateurs et modérateurs peuvent accéder au dashboard.",
+            "code": "FORBIDDEN"
+          }
+        },
+        "note": "Cet endpoint retourne des statistiques complètes sur l'application. L'accès est restreint aux utilisateurs avec le rôle ADMIN ou MODERATOR. Toutes les statistiques excluent les enregistrements soft-deleted.",
+        "details": {
+          "users": {
+            "total": "Nombre total d'utilisateurs (non supprimés)",
+            "active": "Nombre d'utilisateurs avec le statut ACTIVE",
+            "disabled": "Nombre d'utilisateurs avec le statut DISABLED",
+            "email_verified": "Nombre d'utilisateurs avec email vérifié",
+            "by_role": "Répartition des utilisateurs par rôle (USER, ADMIN, MODERATOR, ORGANIZER)"
+          },
+          "events": {
+            "total": "Nombre total d'événements (non supprimés)",
+            "active": "Nombre d'événements avec le statut ACTIVE",
+            "published": "Nombre d'événements avec le statut published",
+            "upcoming": "Nombre d'événements à venir (start_date > maintenant)",
+            "past": "Nombre d'événements passés (end_date < maintenant)",
+            "free": "Nombre d'événements gratuits",
+            "paid": "Nombre d'événements payants",
+            "by_category": "Répartition des événements par catégorie",
+            "popular": "Top 5 des événements les plus populaires (par nombre d'inscriptions actives)"
+          },
+          "registrations": {
+            "total": "Nombre total d'inscriptions (tous statuts confondus)",
+            "active": "Nombre d'inscriptions actives (status: REGISTERED)",
+            "cancelled": "Nombre d'inscriptions annulées (status: CANCELLED)",
+            "this_month": "Nombre d'inscriptions actives créées ce mois-ci"
+          },
+          "favorites": {
+            "total": "Nombre total de favoris (non supprimés)"
+          },
+          "tickets": {
+            "total": "Nombre total de tickets (non supprimés)",
+            "validated": "Nombre de tickets validés (status: VALIDATED)",
+            "pending": "Nombre de tickets en attente (status: PENDING)",
+            "this_month": "Nombre de tickets créés ce mois-ci"
+          },
+          "transactions": {
+            "total": "Nombre total de transactions (non supprimées)",
+            "successful": "Nombre de transactions réussies (status: COMPLETED)",
+            "pending": "Nombre de transactions en attente (status: PENDING)",
+            "total_revenue": "Revenus totaux (somme des transactions COMPLETED)",
+            "revenue_this_month": "Revenus du mois en cours (transactions COMPLETED créées ce mois)"
+          },
+          "categories": {
+            "total": "Nombre total de catégories (non supprimées)",
+            "active": "Nombre de catégories actives (active: true)"
+          }
+        }
+      }
+    },
+    "contact": {
+      "sendMessage": {
+        "path": "/api/contact",
+        "method": "POST",
+        "description": "Envoyer un message de contact. Aucune authentification requise.",
+        "authentication": false,
+        "request": {
+          "body": {
+            "required": ["name", "email", "message"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nom de l'expéditeur"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email de l'expéditeur"
+              },
+              "message": {
+                "type": "string",
+                "description": "Message de contact"
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "status": "success",
+            "message": "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.",
+            "data": {
+              "uid": "string",
+              "name": "string",
+              "email": "string",
+              "created_at": "string"
+            }
+          },
+          "400": {
+            "status": "error",
+            "message": "Veuillez remplir tous les champs (nom, email, message) OU Format d'email invalide"
+          }
+        },
+        "note": "Un email de confirmation est automatiquement envoyé à l'expéditeur. Si ADMIN_EMAIL est configuré dans les variables d'environnement, une notification est également envoyée aux administrateurs."
+      },
+      "getAll": {
+        "path": "/api/contact",
+        "method": "GET",
+        "description": "Obtenir la liste des messages de contact (réservé aux administrateurs et modérateurs)",
+        "authentication": true,
+        "request": {
+          "query": {
+            "properties": {
+              "page": {
+                "type": "integer",
+                "default": 1
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10
+              },
+              "status": {
+                "type": "string",
+                "enum": ["PENDING", "READ", "REPLIED"],
+                "description": "Filtrer par statut"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "data": "array",
+            "pagination": {
+              "page": "number",
+              "limit": "number",
+              "total": "number",
+              "totalPages": "number"
+            }
+          },
+          "403": {
+            "status": "error",
+            "message": "Accès refusé. Seuls les administrateurs et modérateurs peuvent accéder aux messages de contact.",
+            "code": "FORBIDDEN"
+          }
+        }
+      },
+      "getById": {
+        "path": "/api/contact/:uid",
+        "method": "GET",
+        "description": "Obtenir un message de contact par son UID (réservé aux administrateurs et modérateurs)",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID du message"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "data": {
+              "uid": "string",
+              "name": "string",
+              "email": "string",
+              "message": "string",
+              "status": "string",
+              "read_at": "string ou null",
+              "replied_at": "string ou null",
+              "created_at": "string",
+              "updated_at": "string"
+            }
+          },
+          "403": {
+            "status": "error",
+            "message": "Accès refusé. Seuls les administrateurs et modérateurs peuvent accéder aux messages de contact.",
+            "code": "FORBIDDEN"
+          },
+          "404": {
+            "status": "error",
+            "message": "Message non trouvé"
+          }
+        }
+      },
+      "markAsRead": {
+        "path": "/api/contact/:uid/read",
+        "method": "PATCH",
+        "description": "Marquer un message de contact comme lu (réservé aux administrateurs et modérateurs)",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID du message"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "message": "Message marqué comme lu",
+            "data": "object"
+          },
+          "403": {
+            "status": "error",
+            "message": "Accès refusé",
+            "code": "FORBIDDEN"
+          },
+          "404": {
+            "status": "error",
+            "message": "Message non trouvé"
+          }
+        }
+      },
+      "reply": {
+        "path": "/api/contact/:uid/reply",
+        "method": "POST",
+        "description": "Répondre à un message de contact (réservé aux administrateurs et modérateurs). Envoie un email de réponse à l'expéditeur et marque le message comme REPLIED.",
+        "authentication": true,
+        "request": {
+          "params": {
+            "properties": {
+              "uid": {
+                "type": "string",
+                "description": "UID du message"
+              }
+            }
+          },
+          "body": {
+            "required": ["reply_message"],
+            "properties": {
+              "reply_message": {
+                "type": "string",
+                "description": "Message de réponse à envoyer à l'expéditeur"
+              }
+            }
+          }
+        },
+        "response": {
+          "200": {
+            "status": "success",
+            "message": "Réponse envoyée avec succès",
+            "data": "object"
+          },
+          "400": {
+            "status": "error",
+            "message": "Le message de réponse est requis"
+          },
+          "403": {
+            "status": "error",
+            "message": "Accès refusé. Seuls les administrateurs et modérateurs peuvent répondre aux messages.",
+            "code": "FORBIDDEN"
+          },
+          "404": {
+            "status": "error",
+            "message": "Message non trouvé"
+          }
+        },
+        "note": "L'email de réponse est automatiquement envoyé à l'expéditeur du message original. Le message est marqué comme REPLIED et replied_at est mis à jour."
+      }
+    },
     "transactions": {
       "getAll": {
         "path": "/api/transactions",
@@ -1954,6 +2296,188 @@
         }
       },
       "note": "Soft delete : L'événement reste en base de données mais n'apparaît plus dans les listes, favoris ou inscriptions"
+    },
+    "getDashboardStats": {
+      "request": {
+        "url": "GET /api/dashboard",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "data": {
+            "users": {
+              "total": 150,
+              "active": 140,
+              "disabled": 10,
+              "email_verified": 135,
+              "by_role": [
+                { "role": "USER", "count": 120 },
+                { "role": "ADMIN", "count": 5 },
+                { "role": "MODERATOR", "count": 15 },
+                { "role": "ORGANIZER", "count": 10 }
+              ]
+            },
+            "events": {
+              "total": 45,
+              "active": 30,
+              "published": 25,
+              "upcoming": 20,
+              "past": 15,
+              "free": 18,
+              "paid": 27,
+              "by_category": [
+                {
+                  "category": {
+                    "uid": "category-uuid-here",
+                    "name": "Sport"
+                  },
+                  "events_count": 15
+                },
+                {
+                  "category": {
+                    "uid": "category-uuid-here-2",
+                    "name": "Musique"
+                  },
+                  "events_count": 10
+                }
+              ],
+              "popular": [
+                {
+                  "event": {
+                    "uid": "event-uuid-here",
+                    "title": "Concert de Jazz",
+                    "start_date": "2024-12-25T19:00:00Z",
+                    "location": "Parc Central, Paris",
+                    "is_free": true
+                  },
+                  "registrations_count": 150
+                }
+              ]
+            },
+            "registrations": {
+              "total": 500,
+              "active": 450,
+              "cancelled": 50,
+              "this_month": 120
+            },
+            "favorites": {
+              "total": 200
+            },
+            "tickets": {
+              "total": 300,
+              "validated": 250,
+              "pending": 50,
+              "this_month": 80
+            },
+            "transactions": {
+              "total": 300,
+              "successful": 280,
+              "pending": 20,
+              "total_revenue": 15000.50,
+              "revenue_this_month": 5000.25
+            },
+            "categories": {
+              "total": 8,
+              "active": 7
+            }
+          }
+        }
+      },
+      "note": "Cet endpoint est réservé aux administrateurs et modérateurs. Toutes les statistiques excluent les enregistrements soft-deleted."
+    },
+    "sendContactMessage": {
+      "request": {
+        "url": "POST /api/contact",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Jean Dupont",
+          "email": "jean.dupont@example.com",
+          "message": "Bonjour, j'aimerais avoir plus d'informations sur vos événements."
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "status": "success",
+          "message": "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.",
+          "data": {
+            "uid": "contact-message-uuid-here",
+            "name": "Jean Dupont",
+            "email": "jean.dupont@example.com",
+            "created_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      },
+      "note": "Un email de confirmation est automatiquement envoyé à l'expéditeur. Aucune authentification requise pour cet endpoint."
+    },
+    "getContactMessageById": {
+      "request": {
+        "url": "GET /api/contact/:uid",
+        "headers": {
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "contact-message-uuid-here"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "data": {
+            "uid": "contact-message-uuid-here",
+            "name": "Jean Dupont",
+            "email": "jean.dupont@example.com",
+            "message": "Bonjour, j'aimerais avoir plus d'informations sur vos événements.",
+            "status": "PENDING",
+            "read_at": null,
+            "replied_at": null,
+            "created_at": "2024-12-20T10:00:00Z",
+            "updated_at": "2024-12-20T10:00:00Z"
+          }
+        }
+      },
+      "note": "Réservé aux administrateurs et modérateurs."
+    },
+    "replyToContactMessage": {
+      "request": {
+        "url": "POST /api/contact/:uid/reply",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer jwt-token-here"
+        },
+        "params": {
+          "uid": "contact-message-uuid-here"
+        },
+        "body": {
+          "reply_message": "Bonjour Jean,\n\nMerci pour votre message. Nous serions ravis de vous fournir plus d'informations sur nos événements. N'hésitez pas à consulter notre site web ou à nous contacter directement.\n\nCordialement,\nL'équipe Event Management"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Réponse envoyée avec succès",
+          "data": {
+            "uid": "contact-message-uuid-here",
+            "name": "Jean Dupont",
+            "email": "jean.dupont@example.com",
+            "message": "Bonjour, j'aimerais avoir plus d'informations sur vos événements.",
+            "status": "REPLIED",
+            "read_at": "2024-12-20T11:00:00Z",
+            "replied_at": "2024-12-20T11:05:00Z",
+            "created_at": "2024-12-20T10:00:00Z",
+            "updated_at": "2024-12-20T11:05:00Z"
+          }
+        }
+      },
+      "note": "L'email de réponse est automatiquement envoyé à l'expéditeur. Le message est marqué comme REPLIED. Réservé aux administrateurs et modérateurs."
     }
   },
   "notes": {

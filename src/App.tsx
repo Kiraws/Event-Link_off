@@ -24,6 +24,7 @@ import HomePage from "./pages/home"
 import DashboardSettings from "./pages/DashnoardSettings"
 import MemberSpace from "./pages/member"
 import EventParticipantsPage from "./pages/EventParticipants"
+import DashboardContact from "./pages/DashboardContact"
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
               <Route path="/dashboard/events/:eventId/participants" element={<EventParticipantsPage />} />
               <Route path="/dashboard/events_category" element={<DashboardCategory />} />
               <Route path="/dashboard/users" element={<Users />} />
+              <Route path="/dashboard/contact" element={<DashboardContact />} />
               <Route path="/dashboard/apps" element={<Apps />} />
               <Route path="/dashboard/settings" element={<DashboardSettings />} />
             </Route>

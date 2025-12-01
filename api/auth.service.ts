@@ -26,6 +26,7 @@ export interface User {
   role: 'USER' | 'ADMIN' | 'MODERATOR' | 'ORGANIZER';
   phone?: string;
   profile_picture_url?: string;
+  status?: 'ACTIVE' | 'DISABLED' | 'INACTIVE';
 }
 
 export interface AuthResponse {

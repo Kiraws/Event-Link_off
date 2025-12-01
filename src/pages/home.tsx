@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Link, useNavigate } from 'react-router-dom'
 import * as React from "react"
 import { EventCard } from "@/components/cards/EventCard"
-import { eventsService, categoriesService, type Event as ApiEvent, type Category } from "../../api"
+import { eventsService, categoriesService, contactService, type Event as ApiEvent, type Category } from "../../api"
 import { toast } from "sonner"
 import { useEffect, useRef } from 'react'
 import { Highlighter } from '@/components/ui/highlighter'
@@ -123,29 +123,53 @@ const [feedback, setFeedback] = React.useState("");
     return map
   }, [categories])
 
-const handleContact = async () => {
+const handleContact = async (e?: React.FormEvent) => {
+  if (e) {
+    e.preventDefault();
+  }
+
   setFeedback("");
 
   if (!name.trim() || !email.trim() || !message.trim()) {
     setFeedback("❌ Veuillez remplir tous les champs.");
+    toast.error("Veuillez remplir tous les champs.");
     return;
   }
 
-  if (!email.includes("@")) {
+  // Validation email basique
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
     setFeedback("❌ Email invalide.");
+    toast.error("Format d'email invalide.");
     return;
   }
 
   setLoading(true);
 
-  // Simulation API
-  setTimeout(() => {
+  try {
+    const response = await contactService.sendMessage({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      message: message.trim(),
+    });
+
+    if (response.status === 'success' || response.data) {
+      setFeedback("✅ Message envoyé avec succès !");
+      toast.success(response.message || "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } else {
+      throw new Error(response.message || "Erreur lors de l'envoi du message");
+    }
+  } catch (error: any) {
+    console.error('Erreur lors de l\'envoi du message:', error);
+    const errorMessage = error.message || "Erreur lors de l'envoi du message. Veuillez réessayer.";
+    setFeedback(`❌ ${errorMessage}`);
+    toast.error(errorMessage);
+  } finally {
     setLoading(false);
-    setFeedback("✅ Message envoyé avec succès !");
-    setName("");
-    setEmail("");
-    setMessage("");
-  }, 1500);
+  }
 };
 
   useEffect(() => {
@@ -348,19 +372,23 @@ const handleContact = async () => {
             </p>
           </div>
 
-          <div className="space-y-4 text-left">
-
+          <form onSubmit={handleContact} className="space-y-4 text-left">
             <Input
               placeholder="Votre nom"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
+              disabled={loading}
               className="bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
             />
 
             <Input
+              type="email"
               placeholder="Votre email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
               className="bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
             />
 
@@ -368,12 +396,14 @@ const handleContact = async () => {
               placeholder="Votre message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full h-32 rounded-lg p-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+              required
+              disabled={loading}
+              className="w-full h-32 rounded-lg p-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 resize-none"
             />
 
             <div className="flex justify-center pt-3">
               <Button
-                onClick={handleContact}
+                type="submit"
                 disabled={loading}
                 className="w-full sm:w-auto"
               >
@@ -386,7 +416,7 @@ const handleContact = async () => {
                 {feedback}
               </p>
             )}
-          </div>
+          </form>
         </div>
       </section>
 

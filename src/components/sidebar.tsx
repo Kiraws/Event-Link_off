@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CalendarPlus,
   Package2,
+  Mail,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -18,6 +19,7 @@ const mainMenu = [
   { icon: CalendarPlus, label: "Evènements", href: "/dashboard/events" },
   { icon: Package2, label: "Catégories", href: "/dashboard/events_category" },
   { icon: Users, label: "Utilisateurs", href: "/dashboard/users" },
+  { icon: Mail, label: "Messages", href: "/dashboard/contact" },
  ]
 
 
