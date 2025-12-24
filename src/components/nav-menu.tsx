@@ -10,25 +10,28 @@ import type { ComponentProps } from "react"
 
 export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (
   <NavigationMenu {...props}>
-    <NavigationMenuList className="data-[orientation=vertical]:-ms-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
+    <NavigationMenuList className="flex gap-2">
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link to="/">Accueil</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
+
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link to="/events">Evènements</Link>
+          <Link to="/events">Évènements</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
+
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link to="/about">A propos</Link>
+          <Link to="/#about">À propos</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
+
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link to="/contact">Nous Contacter</Link>
+          <Link to="/#contact">Nous contacter</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
     </NavigationMenuList>

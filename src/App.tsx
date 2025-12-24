@@ -25,12 +25,14 @@ import DashboardSettings from "./pages/DashnoardSettings"
 import MemberSpace from "./pages/member"
 import EventParticipantsPage from "./pages/EventParticipants"
 import DashboardContact from "./pages/DashboardContact"
+import { ScrollToHash } from "./components/ScrollToHash"
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
       <Router>
+      <ScrollToHash />
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />

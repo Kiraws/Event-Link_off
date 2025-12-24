@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { useEffect, useRef } from 'react'
 import { Highlighter } from '@/components/ui/highlighter'
 import { Loader2 } from "lucide-react"
+import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -39,6 +40,20 @@ const [feedback, setFeedback] = React.useState("");
   const [events, setEvents] = React.useState<ApiEvent[]>([])
   const [loadingCategories, setLoadingCategories] = React.useState(true)
   const [loadingEvents, setLoadingEvents] = React.useState(true)
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0 }
+}
+
+const fadeLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { opacity: 1, x: 0 }
+}
+
+const fadeRight = {
+  hidden: { opacity: 0, x: 40 },
+  visible: { opacity: 1, x: 0 }
+}
 
   // Charger les catégories
   React.useEffect(() => {
@@ -220,7 +235,16 @@ const handleContact = async (e?: React.FormEvent) => {
       <section className="relative w-full h-[360px] sm:h-[420px]">
         <img src="/bann.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative max-w-6xl mx-auto px-6 sm:px-8 pt-10 sm:pt-14">
+
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          variants={fadeUp}
+          className="relative max-w-6xl mx-auto px-6 sm:px-8 pt-10 sm:pt-14"
+          >
           <h1 className="text-white text-3xl sm:text-4xl font-bold leading-snug max-w-3xl">
             A ne pas manquer !<br />
             Explore les {" "}
@@ -236,11 +260,17 @@ const handleContact = async (e?: React.FormEvent) => {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleSearchSubmit}
               placeholder="Rechercher des évènements, catégories, lieux..."
-              className="rounded-full bg-white/95 backdrop-blur px-5 py-6 text-base shadow-lg"
+              className="rounded-full bg-white/95 backdrop-blur px-5 py-6 text-base shadow-lg 
+                transition-all duration-300 
+                hover:shadow-xl hover:scale-[1.02]
+                focus:scale-[1.02]"
             />
+
           </div>
-        </div>
+        </motion.div>
       </section>
+
+      
       <section className="max-w-6xl mx-auto w-full px-6 sm:px-8 py-6">
        <h2 className="font-bold  text-2xl sm:text-3xl lg:text-3xl">
         Explorer les catégories
@@ -361,8 +391,77 @@ const handleContact = async (e?: React.FormEvent) => {
         </div>
       </section>
 
+      {/* À propos */}
+        <motion.section
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            variants={fadeUp}
+            id="about"
+            className="bg-gradient-to-br from-slate-50 to-slate-100 py-16 sm:py-20"
+          >
+
+        <div className="max-w-5xl mx-auto px-6 sm:px-8">
+          <div className="text-center mb-10">
+            <h2 className="font-bold text-3xl text-gray-700 sm:text-4xl lg:text-5xl mb-4">
+              À propos d'<span className="text-[#D4AF37]">EVENT LINK</span>
+            </h2>
+            <div className="w-24 h-1 bg-[#D4AF37] mx-auto rounded-full"></div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-12 space-y-6">
+            <div className="prose prose-lg max-w-none">
+              <p className="text-slate-700 leading-relaxed text-lg">
+                <span className="font-bold text-[#D4AF37] text-xl">EVENT LINK</span> est une plateforme togolaise née de la passion du sport et animée par une mission claire : offrir à la jeunesse un espace où chaque talent, chaque match et chaque émotion sportive peut enfin briller.
+              </p>
+              
+              <p className="text-slate-700 leading-relaxed text-lg">
+                Déterminé à transformer l'univers du basketball au Togo, EVENT LINK collabore avec des promoteurs engagés pour rendre visibles leurs événements, faciliter la vente des tickets d'entrée et offrir une couverture médiatique dynamique que nous diffusons sur nos réseaux sociaux afin de toucher un public toujours plus large.
+              </p>
+              
+              <p className="text-slate-700 leading-relaxed text-lg">
+                Plus qu'un simple site, <span className="font-semibold text-[#D4AF37]">EVENT LINK est un mouvement</span> qui célèbre l'énergie, l'ambition et le potentiel des jeunes sportifs togolais, tout en construisant un pont entre leurs rêves et les opportunités qui peuvent changer leur vie.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 mt-8 border-t border-slate-200">
+              <div className="text-center space-y-2">
+                <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-slate-900">Jeunesse</h3>
+                <p className="text-sm text-slate-600">Un espace dédié aux talents sportifs togolais</p>
+              </div>
+
+              <div className="text-center space-y-2">
+                <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-slate-900">Événements</h3>
+                <p className="text-sm text-slate-600">Vente de tickets et promotion d'événements sportifs</p>
+              </div>
+
+              <div className="text-center space-y-2">
+                <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-8 h-8 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-slate-900">Impact</h3>
+                <p className="text-sm text-slate-600">Connecter les rêves aux opportunités</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
       {/* Newsletter */}
-      <section className="bg-[#D4AF37] py-20">
+      <section id="contact" className="bg-[#D4AF37] py-20">
         <div className="max-w-xl mx-auto px-6 text-center space-y-6">
 
           <div>
@@ -405,7 +504,7 @@ const handleContact = async (e?: React.FormEvent) => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full sm:w-auto"
+                className="transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
                 {loading ? "Envoi en cours..." : "Envoyer"}
               </Button>
