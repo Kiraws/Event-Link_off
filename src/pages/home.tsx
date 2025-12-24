@@ -45,15 +45,7 @@ const fadeUp = {
   visible: { opacity: 1, y: 0 }
 }
 
-const fadeLeft = {
-  hidden: { opacity: 0, x: -40 },
-  visible: { opacity: 1, x: 0 }
-}
 
-const fadeRight = {
-  hidden: { opacity: 0, x: 40 },
-  visible: { opacity: 1, x: 0 }
-}
 
   // Charger les catégories
   React.useEffect(() => {
@@ -138,54 +130,54 @@ const fadeRight = {
     return map
   }, [categories])
 
-const handleContact = async (e?: React.FormEvent) => {
-  if (e) {
-    e.preventDefault();
-  }
-
-  setFeedback("");
-
-  if (!name.trim() || !email.trim() || !message.trim()) {
-    setFeedback("❌ Veuillez remplir tous les champs.");
-    toast.error("Veuillez remplir tous les champs.");
-    return;
-  }
-
-  // Validation email basique
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    setFeedback("❌ Email invalide.");
-    toast.error("Format d'email invalide.");
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const response = await contactService.sendMessage({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      message: message.trim(),
-    });
-
-    if (response.status === 'success' || response.data) {
-      setFeedback("✅ Message envoyé avec succès !");
-      toast.success(response.message || "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.");
-      setName("");
-      setEmail("");
-      setMessage("");
-    } else {
-      throw new Error(response.message || "Erreur lors de l'envoi du message");
+    const handleContact = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
     }
-  } catch (error: any) {
-    console.error('Erreur lors de l\'envoi du message:', error);
-    const errorMessage = error.message || "Erreur lors de l'envoi du message. Veuillez réessayer.";
-    setFeedback(`❌ ${errorMessage}`);
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setFeedback("");
+
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setFeedback("❌ Veuillez remplir tous les champs.");
+      toast.error("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    // Validation email basique
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setFeedback("❌ Email invalide.");
+      toast.error("Format d'email invalide.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await contactService.sendMessage({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        message: message.trim(),
+      });
+
+      if (response.status === 'success' || response.data) {
+        setFeedback("✅ Message envoyé avec succès !");
+        toast.success(response.message || "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.");
+        setName("");
+        setEmail("");
+        setMessage("");
+      } else {
+        throw new Error(response.message || "Erreur lors de l'envoi du message");
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+      const errorMessage = error.message || "Erreur lors de l'envoi du message. Veuillez réessayer.";
+      setFeedback(`❌ ${errorMessage}`);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const carousel = carouselRef.current
